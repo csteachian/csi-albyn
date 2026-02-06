@@ -262,7 +262,7 @@
    <div class="container"><!-- Query Panel -->
     <div class="panel query-input">
      <h2>SQL Query</h2>
-     <div class="template-buttons"><button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects')">Select All</button> <button class="template-btn" onclick="insertTemplate('SELECT Name, Surname, Age FROM Suspects WHERE Age > 30')">Filter by Age</button> <button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects WHERE Hair = \" black\)>Hair Color</button> <button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects WHERE Features LIKE \" %glasses%\)>Features Search</button> <button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects WHERE Blood = \" a\)>Blood Type</button> <button class="template-btn" onclick="insertTemplate('SELECT COUNT(*) as Total FROM Suspects')">Count Rows</button>
+     <div class="template-buttons"><button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects')">Select All</button> <button class="template-btn" onclick="insertTemplate('SELECT COUNT(*) as `Total Suspects` FROM Suspects')">Count All</button> <button class="template-btn" onclick="insertTemplate('SELECT MAX(Age) as `Oldest Age` FROM Suspects')">Max Age</button> <button class="template-btn" onclick="insertTemplate('SELECT MIN(Age) as `Youngest Age` FROM Suspects')">Min Age</button> <button class="template-btn" onclick="insertTemplate('SELECT AVG(Age) as `Average Age` FROM Suspects')">Avg Age</button> <button class="template-btn" onclick="insertTemplate('SELECT SUM(Age) as `Total Years` FROM Suspects')">Sum Ages</button> <button class="template-btn" onclick="insertTemplate('SELECT Name, Surname, Age FROM Suspects WHERE Age > 30')">Filter by Age</button>
      </div><textarea id="queryInput" placeholder="Enter your SQL query here...
 Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
      <div class="button-group"><button class="run-btn" onclick="executeQuery()">▶ RUN QUERY</button> <button class="clear-btn" onclick="clearQuery()">CLEAR</button>
@@ -362,78 +362,228 @@ Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
     function parseSQLQuery(query, data) {
       const queryUpper = query.toUpperCase().trim();
 
-      // Handle COUNT queries
-      if (queryUpper.includes('COUNT(*)')) {
-        let filteredData = data;
-        const whereMatch = queryUpper.match(/WHERE\s+(.*?)$/i);
-        if (whereMatch) {
-          filteredData = applyWhere(data, whereMatch[1]);
-        }
-        return [{ Total: filteredData.length }];
-      }
-
       // Parse SELECT
-      const selectMatch = queryUpper.match(/SELECT\s+(.*?)\s+FROM/i);
+      const selectMatch = query.match(/SELECT\s+(.*?)\s+FROM/i);
       if (!selectMatch) throw new Error('Invalid SELECT syntax');
       
       const selectPart = selectMatch[1].trim();
-      let columns = [];
-      
-      if (selectPart === '*') {
-        columns = Object.keys(data[0]);
-      } else {
-        columns = selectPart.split(',').map(c => c.trim());
-      }
 
       // Parse WHERE
       let filteredData = data;
-      const whereMatch = queryUpper.match(/WHERE\s+(.*?)$/i);
+      const whereMatch = query.match(/WHERE\s+(.*?)$/i);
       if (whereMatch) {
         filteredData = applyWhere(data, whereMatch[1]);
       }
+
+      // Check if query contains aggregate functions
+      const aggregateFunctions = ['COUNT', 'SUM', 'AVG', 'AVERAGE', 'MAX', 'MIN'];
+      const hasAggregate = aggregateFunctions.some(func => queryUpper.includes(func));
+
+      if (hasAggregate) {
+        return parseAggregateQuery(selectPart, filteredData, query);
+      }
+
+      // Handle regular SELECT
+      if (selectPart === '*') {
+        return filteredData;
+      }
+
+      const columns = selectPart.split(',').map(c => c.trim());
 
       // Return only selected columns
       return filteredData.map(row => {
         const newRow = {};
         columns.forEach(col => {
-          newRow[col] = row[col];
+          // Find the actual column key (case-insensitive)
+          const actualKey = Object.keys(row).find(key => key.toLowerCase() === col.toLowerCase());
+          if (actualKey) {
+            newRow[col] = row[actualKey];
+          }
         });
         return newRow;
       });
     }
 
+    function parseAggregateQuery(selectPart, data, fullQuery) {
+      const result = {};
+      const selectItems = selectPart.split(',').map(s => s.trim());
+
+      selectItems.forEach(item => {
+        // Parse aggregate function: FUNCTION(COLUMN) [as ALIAS]
+        const aggMatch = item.match(/(\w+)\s*\(\s*(\*|\w+)\s*\)(?:\s+(?:as|AS)\s+(?:`([^`]+)`|\[([^\]]+)\]|(\w+)))?/i);
+        
+        if (aggMatch) {
+          const [, funcName, fieldOrStar, alias1, alias2, alias3] = aggMatch;
+          const func = funcName.toUpperCase();
+          const field = fieldOrStar === '*' ? null : fieldOrStar;
+          const aliasName = alias1 || alias2 || alias3 || `${func}(${fieldOrStar})`;
+
+          if (func === 'COUNT') {
+            if (fieldOrStar === '*') {
+              result[aliasName] = data.length;
+            } else {
+              // COUNT(field) counts non-null values
+              const actualKey = Object.keys(data[0] || {}).find(key => key.toLowerCase() === field.toLowerCase());
+              result[aliasName] = actualKey ? data.filter(row => row[actualKey] !== null).length : 0;
+            }
+          } else if (func === 'SUM') {
+            const actualKey = Object.keys(data[0] || {}).find(key => key.toLowerCase() === field.toLowerCase());
+            if (actualKey) {
+              result[aliasName] = data.reduce((sum, row) => sum + (Number(row[actualKey]) || 0), 0);
+            }
+          } else if (func === 'AVG' || func === 'AVERAGE') {
+            const actualKey = Object.keys(data[0] || {}).find(key => key.toLowerCase() === field.toLowerCase());
+            if (actualKey && data.length > 0) {
+              const sum = data.reduce((sum, row) => sum + (Number(row[actualKey]) || 0), 0);
+              result[aliasName] = (sum / data.length).toFixed(2);
+            }
+          } else if (func === 'MAX') {
+            const actualKey = Object.keys(data[0] || {}).find(key => key.toLowerCase() === field.toLowerCase());
+            if (actualKey && data.length > 0) {
+              result[aliasName] = Math.max(...data.map(row => Number(row[actualKey]) || -Infinity));
+            }
+          } else if (func === 'MIN') {
+            const actualKey = Object.keys(data[0] || {}).find(key => key.toLowerCase() === field.toLowerCase());
+            if (actualKey && data.length > 0) {
+              result[aliasName] = Math.min(...data.map(row => Number(row[actualKey]) || Infinity));
+            }
+          }
+        } else {
+          // Regular column (non-aggregate in GROUP BY context)
+          const actualKey = Object.keys(data[0] || {}).find(key => key.toLowerCase() === item.toLowerCase());
+          if (actualKey && data.length > 0) {
+            result[item] = data[0][actualKey];
+          }
+        }
+      });
+
+      return [result];
+    }
+
+    function evaluateCondition(row, condition) {
+      condition = condition.trim();
+
+      // Handle >= and <= comparisons with decimals (check these FIRST before > and <)
+      const gteMatch = condition.match(/(\w+)\s*>=\s*([\d.]+)/i);
+      if (gteMatch) {
+        const [, field, value] = gteMatch;
+        const actualKey = Object.keys(row).find(key => key.toLowerCase() === field.toLowerCase());
+        if (actualKey) {
+          const cellValue = row[actualKey];
+          if (cellValue === null) return false;
+          return Number(cellValue) >= Number(value);
+        }
+      }
+
+      const lteMatch = condition.match(/(\w+)\s*<=\s*([\d.]+)/i);
+      if (lteMatch) {
+        const [, field, value] = lteMatch;
+        const actualKey = Object.keys(row).find(key => key.toLowerCase() === field.toLowerCase());
+        if (actualKey) {
+          const cellValue = row[actualKey];
+          if (cellValue === null) return false;
+          return Number(cellValue) <= Number(value);
+        }
+      }
+
+      // Handle != comparisons
+      const neMatch = condition.match(/(\w+)\s*!=\s*['""]?([^'""]+)['""]?/i);
+      if (neMatch) {
+        const [, field, value] = neMatch;
+        const actualKey = Object.keys(row).find(key => key.toLowerCase() === field.toLowerCase());
+        if (actualKey) {
+          const cellValue = row[actualKey];
+          if (cellValue === null) return false;
+          return String(cellValue).toLowerCase() !== String(value).toLowerCase();
+        }
+      }
+
+      // Handle > comparisons with decimals
+      const gtMatch = condition.match(/(\w+)\s*>\s*([\d.]+)/i);
+      if (gtMatch) {
+        const [, field, value] = gtMatch;
+        const actualKey = Object.keys(row).find(key => key.toLowerCase() === field.toLowerCase());
+        if (actualKey) {
+          const cellValue = row[actualKey];
+          if (cellValue === null) return false;
+          return Number(cellValue) > Number(value);
+        }
+      }
+
+      // Handle < comparisons with decimals
+      const ltMatch = condition.match(/(\w+)\s*<\s*([\d.]+)/i);
+      if (ltMatch) {
+        const [, field, value] = ltMatch;
+        const actualKey = Object.keys(row).find(key => key.toLowerCase() === field.toLowerCase());
+        if (actualKey) {
+          const cellValue = row[actualKey];
+          if (cellValue === null) return false;
+          return Number(cellValue) < Number(value);
+        }
+      }
+
+      // Handle = comparisons
+      const eqMatch = condition.match(/(\w+)\s*=\s*['""]?([^'""]+)['""]?/i);
+      if (eqMatch) {
+        const [, field, value] = eqMatch;
+        const actualKey = Object.keys(row).find(key => key.toLowerCase() === field.toLowerCase());
+        if (actualKey) {
+          const cellValue = row[actualKey];
+          if (cellValue === null) return false;
+          return String(cellValue).toLowerCase() === String(value).toLowerCase();
+        }
+      }
+
+      // Handle LIKE comparisons
+      const likeMatch = condition.match(/(\w+)\s+LIKE\s+['""]?%?([^'""]+)%?['""]?/i);
+      if (likeMatch) {
+        const [, field, value] = likeMatch;
+        const actualKey = Object.keys(row).find(key => key.toLowerCase() === field.toLowerCase());
+        if (actualKey) {
+          const cellValue = row[actualKey];
+          if (cellValue === null) return false;
+          return String(cellValue).toLowerCase().includes(String(value).toLowerCase());
+        }
+      }
+
+      return false;
+    }
+
     function applyWhere(data, whereClause) {
       return data.filter(row => {
-        // Handle = comparisons
-        const eqMatch = whereClause.match(/(\w+)\s*=\s*['""]?([^'""]+)['""]?/i);
-        if (eqMatch) {
-          const [, field, value] = eqMatch;
-          return String(row[field]).toLowerCase() === String(value).toLowerCase();
-        }
-
-        // Handle > comparisons
-        const gtMatch = whereClause.match(/(\w+)\s*>\s*(\d+)/i);
-        if (gtMatch) {
-          const [, field, value] = gtMatch;
-          return Number(row[field]) > Number(value);
-        }
-
-        // Handle < comparisons
-        const ltMatch = whereClause.match(/(\w+)\s*<\s*(\d+)/i);
-        if (ltMatch) {
-          const [, field, value] = ltMatch;
-          return Number(row[field]) < Number(value);
-        }
-
-        // Handle LIKE comparisons
-        const likeMatch = whereClause.match(/(\w+)\s+LIKE\s+['""]?%?([^'""]+)%?['""]?/i);
-        if (likeMatch) {
-          const [, field, value] = likeMatch;
-          return String(row[field]).toLowerCase().includes(String(value).toLowerCase());
-        }
-
-        return true;
+        return evaluateWhereClause(row, whereClause);
       });
+    }
+
+    function evaluateWhereClause(row, clause) {
+      clause = clause.trim();
+
+      // Handle NOT operator (highest precedence)
+      const notMatch = clause.match(/^\s*NOT\s+(.+)$/i);
+      if (notMatch) {
+        return !evaluateWhereClause(row, notMatch[1]);
+      }
+
+      // Handle OR operator (lowest precedence - split by OR first)
+      const orParts = splitByOperator(clause, 'OR');
+      if (orParts.length > 1) {
+        return orParts.some(part => evaluateWhereClause(row, part));
+      }
+
+      // Handle AND operator (higher precedence than OR)
+      const andParts = splitByOperator(clause, 'AND');
+      if (andParts.length > 1) {
+        return andParts.every(part => evaluateWhereClause(row, part));
+      }
+
+      // Base case: evaluate single condition
+      return evaluateCondition(row, clause);
+    }
+
+    function splitByOperator(clause, operator) {
+      const regex = new RegExp(`\\s+${operator}\\s+`, 'i');
+      const parts = clause.split(regex);
+      return parts.map(p => p.trim()).filter(p => p.length > 0);
     }
 
     function displayResults(results, container, info) {
@@ -474,5 +624,5 @@ Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
       return div.innerHTML;
     }
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9a0c35c5ee8e49',t:'MTc3MDM3NDYxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9a2a0dc22a8e49',t:'MTc3MDM3NTg0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
