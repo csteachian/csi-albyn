@@ -263,10 +263,10 @@
     <div class="panel query-input">
      <h2>SQL Query</h2>
      <div class="template-buttons"><button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects')">Select All</button> <button class="template-btn" onclick="insertTemplate('SELECT COUNT(*) as `Total Suspects` FROM Suspects')">Count All</button> <button class="template-btn" onclick="insertTemplate('SELECT MAX(Age) as `Oldest Age` FROM Suspects')">Max Age</button> <button class="template-btn" onclick="insertTemplate('SELECT MIN(Age) as `Youngest Age` FROM Suspects')">Min Age</button> <button class="template-btn" onclick="insertTemplate('SELECT AVG(Age) as `Average Age` FROM Suspects')">Avg Age</button> <button class="template-btn" onclick="insertTemplate('SELECT SUM(Age) as `Total Years` FROM Suspects')">Sum Ages</button> <button class="template-btn" onclick="insertTemplate('SELECT Name, Surname, Age FROM Suspects WHERE Age > 30')">Filter by Age</button>
+     </div>
+     <div class="button-group"><button class="run-btn" onclick="executeQuery()">▶ RUN QUERY</button> <button class="clear-btn" onclick="clearQuery()">CLEAR</button>
      </div><textarea id="queryInput" placeholder="Enter your SQL query here...
 Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
-     <div class="button-group"><button class="run-btn" onclick="executeQuery()">▶ RUN QUERY</button> <button class="clear-btn" onclick="clearQuery()">CLEAR</button>
-     </div>
     </div><!-- Results Panel -->
     <div class="panel results-panel">
      <h2>Query Results</h2>
@@ -682,5 +682,5 @@ Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
       return div.innerHTML;
     }
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9a3130262e8e49',t:'MTc3MDM3NjEzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9a377222b18e49',t:'MTc3MDM3NjM4OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
