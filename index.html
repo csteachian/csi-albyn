@@ -368,9 +368,9 @@ Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
       
       const selectPart = selectMatch[1].trim();
 
-      // Parse WHERE
+      // Parse WHERE (stop before ORDER BY if present)
       let filteredData = data;
-      const whereMatch = query.match(/WHERE\s+(.*?)$/i);
+      const whereMatch = query.match(/WHERE\s+(.*?)(?=ORDER BY|$)/i);
       if (whereMatch) {
         filteredData = applyWhere(data, whereMatch[1]);
       }
@@ -384,24 +384,33 @@ Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
       }
 
       // Handle regular SELECT
+      let results;
       if (selectPart === '*') {
-        return filteredData;
+        results = filteredData;
+      } else {
+        const columns = selectPart.split(',').map(c => c.trim());
+
+        // Return only selected columns
+        results = filteredData.map(row => {
+          const newRow = {};
+          columns.forEach(col => {
+            // Find the actual column key (case-insensitive)
+            const actualKey = Object.keys(row).find(key => key.toLowerCase() === col.toLowerCase());
+            if (actualKey) {
+              newRow[col] = row[actualKey];
+            }
+          });
+          return newRow;
+        });
       }
 
-      const columns = selectPart.split(',').map(c => c.trim());
+      // Parse and apply ORDER BY
+      const orderByMatch = query.match(/ORDER BY\s+(.+?)$/i);
+      if (orderByMatch) {
+        results = applyOrderBy(results, orderByMatch[1]);
+      }
 
-      // Return only selected columns
-      return filteredData.map(row => {
-        const newRow = {};
-        columns.forEach(col => {
-          // Find the actual column key (case-insensitive)
-          const actualKey = Object.keys(row).find(key => key.toLowerCase() === col.toLowerCase());
-          if (actualKey) {
-            newRow[col] = row[actualKey];
-          }
-        });
-        return newRow;
-      });
+      return results;
     }
 
     function parseAggregateQuery(selectPart, data, fullQuery) {
@@ -555,6 +564,55 @@ Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
       });
     }
 
+    function applyOrderBy(results, orderByClause) {
+      // Parse ORDER BY clause: "Field1 ASC, Field2 DESC, Field3"
+      const orderItems = orderByClause.split(',').map(item => {
+        const trimmed = item.trim();
+        const parts = trimmed.split(/\s+/);
+        const field = parts[0];
+        const direction = parts[1] ? parts[1].toUpperCase() : 'ASC';
+        
+        if (direction !== 'ASC' && direction !== 'DESC') {
+          throw new Error(`Invalid sort direction: ${direction}. Use ASC or DESC.`);
+        }
+        
+        return { field, direction };
+      });
+
+      // Sort by all fields in order
+      return results.sort((a, b) => {
+        for (const order of orderItems) {
+          const aVal = a[order.field];
+          const bVal = b[order.field];
+
+          if (aVal === undefined || bVal === undefined) {
+            continue; // Skip if field not in result
+          }
+
+          let comparison = 0;
+
+          // Handle NULL values (NULL sorts to the end)
+          if (aVal === null && bVal === null) comparison = 0;
+          else if (aVal === null) comparison = 1;
+          else if (bVal === null) comparison = -1;
+          else if (typeof aVal === 'number' && typeof bVal === 'number') {
+            comparison = aVal - bVal;
+          } else if (typeof aVal === 'string' && typeof bVal === 'string') {
+            comparison = aVal.localeCompare(bVal);
+          } else {
+            comparison = String(aVal).localeCompare(String(bVal));
+          }
+
+          // Apply sort direction
+          if (comparison !== 0) {
+            return order.direction === 'DESC' ? -comparison : comparison;
+          }
+        }
+
+        return 0; // All fields are equal
+      });
+    }
+
     function evaluateWhereClause(row, clause) {
       clause = clause.trim();
 
@@ -624,5 +682,5 @@ Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
       return div.innerHTML;
     }
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9a2a0dc22a8e49',t:'MTc3MDM3NTg0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9a3130262e8e49',t:'MTc3MDM3NjEzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
