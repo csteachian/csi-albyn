@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Suspects Database Simulator</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    .app-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 2.2em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      letter-spacing: 1px;
+    }
+
+    .header p {
+      margin: 8px 0 0 0;
+      opacity: 0.9;
+      font-size: 0.95em;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      flex-grow: 1;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel h2 {
+      margin: 0 0 16px 0;
+      color: #1e3c72;
+      font-size: 1.3em;
+      border-bottom: 3px solid #2a5298;
+      padding-bottom: 10px;
+    }
+
+    .query-input {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .template-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .template-btn {
+      background: #f0f4f8;
+      border: 2px solid #2a5298;
+      color: #1e3c72;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85em;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .template-btn:hover {
+      background: #2a5298;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    textarea {
+      flex: 1;
+      border: 2px solid #2a5298;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95em;
+      resize: none;
+      color: #1e3c72;
+      background: #f9fafb;
+      margin-bottom: 12px;
+    }
+
+    textarea:focus {
+      outline: none;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.2);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .run-btn, .clear-btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Courier New', monospace;
+    }
+
+    .run-btn {
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      color: white;
+    }
+
+    .run-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(42, 82, 152, 0.4);
+    }
+
+    .run-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .clear-btn {
+      background: #e0e7ff;
+      color: #1e3c72;
+    }
+
+    .clear-btn:hover {
+      background: #c7d2fd;
+    }
+
+    .results-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .results-info {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .results-info.error {
+      color: #dc2626;
+      background: #fee2e2;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 4px solid #dc2626;
+    }
+
+    .results-info.success {
+      color: #059669;
+      background: #d1fae5;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 4px solid #059669;
+    }
+
+    .results-table {
+      flex: 1;
+      overflow: auto;
+      background: #f9fafb;
+      border: 2px solid #2a5298;
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+
+    th {
+      background: #1e3c72;
+      color: white;
+      padding: 10px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #2a5298;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #374151;
+    }
+
+    tr:nth-child(even) {
+      background: #f3f4f6;
+    }
+
+    tr:hover {
+      background: #e5e7eb;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #999;
+      padding: 40px 20px;
+      font-style: italic;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .template-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="app-wrapper">
+   <div class="header">
+    <h1>🔍 SQL Suspects Database Simulator</h1>
+    <p>Write SQL queries to explore the Suspects database</p>
+   </div>
+   <div class="container"><!-- Query Panel -->
+    <div class="panel query-input">
+     <h2>SQL Query</h2>
+     <div class="template-buttons"><button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects')">Select All</button> <button class="template-btn" onclick="insertTemplate('SELECT Name, Surname, Age FROM Suspects WHERE Age > 30')">Filter by Age</button> <button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects WHERE Hair = \" black\)>Hair Color</button> <button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects WHERE Features LIKE \" %glasses%\)>Features Search</button> <button class="template-btn" onclick="insertTemplate('SELECT * FROM Suspects WHERE Blood = \" a\)>Blood Type</button> <button class="template-btn" onclick="insertTemplate('SELECT COUNT(*) as Total FROM Suspects')">Count Rows</button>
+     </div><textarea id="queryInput" placeholder="Enter your SQL query here...
+Example: SELECT * FROM Suspects WHERE Age > 25"></textarea>
+     <div class="button-group"><button class="run-btn" onclick="executeQuery()">▶ RUN QUERY</button> <button class="clear-btn" onclick="clearQuery()">CLEAR</button>
+     </div>
+    </div><!-- Results Panel -->
+    <div class="panel results-panel">
+     <h2>Query Results</h2>
+     <div id="resultsInfo" class="results-info"></div>
+     <div class="results-table">
+      <div id="resultsContainer" class="empty-state">
+       Run a query to see results
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Suspects Database
+    const suspectsData = [
+      {"No_": 1, "Name": "Brian", "Surname": "Malone", "Sex": "Male", "Age": 23, "Height_metres": 1.5, "Hair": "Black", "Passport": "American", "Features": "Moustache", "Blood": "A"},
+      {"No_": 2, "Name": "Emma", "Surname": "Hunter", "Sex": "Female", "Age": 31, "Height_metres": 1.67, "Hair": "Blonde", "Passport": "None", "Features": "Glasses", "Blood": "O"},
+      {"No_": 3, "Name": "Reggie", "Surname": "Smith", "Sex": "Male", "Age": 68, "Height_metres": 1.71, "Hair": "Bald", "Passport": "None", "Features": "Tattoo", "Blood": "A"},
+      {"No_": 4, "Name": "Pete", "Surname": "Bradshaw", "Sex": "Male", "Age": 34, "Height_metres": 1.95, "Hair": "Black", "Passport": "None", "Features": "Scar", "Blood": "B"},
+      {"No_": 5, "Name": "Cynthia", "Surname": "Brown", "Sex": "Female", "Age": 19, "Height_metres": null, "Hair": "Brown", "Passport": "None", "Features": "Earring", "Blood": "O"},
+      {"No_": 6, "Name": "Max", "Surname": "Schmidt", "Sex": "Male", "Age": 32, "Height_metres": 1.67, "Hair": "Fair", "Passport": "German", "Features": "Earring", "Blood": "B"},
+      {"No_": 7, "Name": "Pat", "Surname": "Wood", "Sex": "Male", "Age": 65, "Height_metres": 1.6, "Hair": "Black", "Passport": "None", "Features": "Tattoo", "Blood": "A"},
+      {"No_": 8, "Name": "Frank", "Surname": "Lamb", "Sex": "Male", "Age": 55, "Height_metres": 1.72, "Hair": "Bald", "Passport": "None", "Features": "Beard", "Blood": "B"},
+      {"No_": 9, "Name": "Rosemary", "Surname": "Fisher", "Sex": "Female", "Age": 18, "Height_metres": 1.75, "Hair": "Brown", "Passport": "None", "Features": "Smoker", "Blood": "O"},
+      {"No_": 10, "Name": "Patricia", "Surname": "Flynn", "Sex": "Female", "Age": 25, "Height_metres": 1.62, "Hair": "Black", "Passport": "None", "Features": "Limps", "Blood": "B"},
+      {"No_": 11, "Name": "Steffi", "Surname": "Braun", "Sex": "Female", "Age": 44, "Height_metres": 1.71, "Hair": "Blonde", "Passport": "German", "Features": "Glasses", "Blood": "A"},
+      {"No_": 12, "Name": "Susanne", "Surname": "Le Bon", "Sex": "Female", "Age": 30, "Height_metres": 1.73, "Hair": "Black", "Passport": "French", "Features": "Eye patch", "Blood": "O"},
+      {"No_": 13, "Name": "Kevin", "Surname": "Carter", "Sex": "Male", "Age": 35, "Height_metres": 1.61, "Hair": "Brown", "Passport": "None", "Features": "Moustache", "Blood": "O"},
+      {"No_": 14, "Name": "Boris", "Surname": "Weiss", "Sex": "Male", "Age": 17, "Height_metres": 1.69, "Hair": "Black", "Passport": "German", "Features": "Earring", "Blood": "B"},
+      {"No_": 15, "Name": "Rose", "Surname": "Wilson", "Sex": "Female", "Age": 33, "Height_metres": null, "Hair": "Blonde", "Passport": "None", "Features": "Earring", "Blood": "A"},
+      {"No_": 16, "Name": "David", "Surname": "Evans", "Sex": "Male", "Age": 29, "Height_metres": 1.69, "Hair": "Brown", "Passport": "None", "Features": "Deaf", "Blood": "O"},
+      {"No_": 17, "Name": "Basil", "Surname": "Smith", "Sex": "Male", "Age": 35, "Height_metres": 1.75, "Hair": "Bald", "Passport": "None", "Features": "Eye patch", "Blood": "B"},
+      {"No_": 18, "Name": "Jose", "Surname": "Sebastien", "Sex": "Male", "Age": 35, "Height_metres": 1.74, "Hair": "Black", "Passport": "Spanish", "Features": "Moustache", "Blood": "A"},
+      {"No_": 19, "Name": "William", "Surname": "Hacker", "Sex": "Male", "Age": 26, "Height_metres": 1.62, "Hair": "Black", "Passport": "None", "Features": "Beard", "Blood": "A"},
+      {"No_": 20, "Name": "Sean", "Surname": "Head", "Sex": "Male", "Age": 47, "Height_metres": 1.69, "Hair": "Black", "Passport": "None", "Features": "Moustache", "Blood": "B"},
+      {"No_": 21, "Name": "Reggie", "Surname": "Smart", "Sex": "Male", "Age": 36, "Height_metres": 1.81, "Hair": "Black", "Passport": "None", "Features": "Deaf", "Blood": "O"},
+      {"No_": 22, "Name": "Rita", "Surname": "Ferrari", "Sex": "Female", "Age": 29, "Height_metres": 1.81, "Hair": "Black", "Passport": "Spanish", "Features": "Tattoo", "Blood": "O"},
+      {"No_": 23, "Name": "Matthew", "Surname": "Morgan", "Sex": "Male", "Age": 65, "Height_metres": 1.76, "Hair": "Bald", "Passport": "American", "Features": "Glasses", "Blood": "O"},
+      {"No_": 24, "Name": "Martin", "Surname": "Mitchell", "Sex": "Male", "Age": 53, "Height_metres": 1.96, "Hair": "Fair", "Passport": "None", "Features": "Scar", "Blood": "O"},
+      {"No_": 25, "Name": "Mary", "Surname": "Morris", "Sex": "Female", "Age": 28, "Height_metres": null, "Hair": "Black", "Passport": "None", "Features": "Earring", "Blood": "A"},
+      {"No_": 26, "Name": "Stanley", "Surname": "Smith", "Sex": "Male", "Age": 19, "Height_metres": 1.77, "Hair": "Fair", "Passport": "American", "Features": "Smoker", "Blood": "O"},
+      {"No_": 27, "Name": "Toby", "Surname": "Gunne", "Sex": "Male", "Age": 17, "Height_metres": null, "Hair": "Brown", "Passport": "None", "Features": "Deaf", "Blood": "A"},
+      {"No_": 28, "Name": "Patrick", "Surname": "Brown", "Sex": "Male", "Age": 24, "Height_metres": 2.08, "Hair": "Black", "Passport": "None", "Features": "Scar", "Blood": "B"},
+      {"No_": 29, "Name": "Francis", "Surname": "Morgan", "Sex": "Male", "Age": 18, "Height_metres": null, "Hair": "Brown", "Passport": "None", "Features": "Glasses", "Blood": "A"},
+      {"No_": 30, "Name": "Marie", "Surname": "Estelle", "Sex": "Female", "Age": 22, "Height_metres": null, "Hair": "Black", "Passport": "French", "Features": "Glasses", "Blood": "B"},
+      {"No_": 31, "Name": "John", "Surname": "Harris", "Sex": "Male", "Age": 39, "Height_metres": null, "Hair": "Brown", "Passport": "None", "Features": "Scar", "Blood": "A"},
+      {"No_": 32, "Name": "Sam", "Surname": "Smart", "Sex": "Male", "Age": 30, "Height_metres": 1.72, "Hair": "Fair", "Passport": "None", "Features": "Limps", "Blood": "O"},
+      {"No_": 33, "Name": "Alan", "Surname": "DaSilva", "Sex": "Male", "Age": 29, "Height_metres": 1.94, "Hair": "Brown", "Passport": "American", "Features": "Moustache", "Blood": "O"},
+      {"No_": 34, "Name": "Ruth", "Surname": "Flynn", "Sex": "Female", "Age": 56, "Height_metres": 1.86, "Hair": "Black", "Passport": "None", "Features": "Perfume", "Blood": "A"},
+      {"No_": 35, "Name": "Andrew", "Surname": "Campbell", "Sex": "Male", "Age": 30, "Height_metres": null, "Hair": "Fair", "Passport": "None", "Features": "Scar", "Blood": "O"},
+      {"No_": 36, "Name": "Pierre", "Surname": "Blanc", "Sex": "Male", "Age": 65, "Height_metres": null, "Hair": "Black", "Passport": "French", "Features": "Moustache", "Blood": "B"},
+      {"No_": 37, "Name": "Lucy", "Surname": "Smith", "Sex": "Female", "Age": 55, "Height_metres": 1.68, "Hair": "Blonde", "Passport": "None", "Features": "Smoker", "Blood": "A"},
+      {"No_": 38, "Name": "Sonnie", "Surname": "Bakker", "Sex": "Female", "Age": 65, "Height_metres": 1.75, "Hair": "Blonde", "Passport": "Dutch", "Features": "Glasses", "Blood": "O"},
+      {"No_": 39, "Name": "Percy", "Surname": "Blake", "Sex": "Male", "Age": 25, "Height_metres": 1.57, "Hair": "Black", "Passport": "None", "Features": "Scar", "Blood": "A"},
+      {"No_": 40, "Name": "Jim", "Surname": "Wilton", "Sex": "Male", "Age": 21, "Height_metres": 1.71, "Hair": "Brown", "Passport": "None", "Features": "Tattoo", "Blood": "O"},
+      {"No_": 41, "Name": "Sam", "Surname": "Simpson", "Sex": "Male", "Age": 41, "Height_metres": 1.56, "Hair": "Brown", "Passport": "American", "Features": "Limps", "Blood": "O"},
+      {"No_": 42, "Name": "Harry", "Surname": "Sloan", "Sex": "Male", "Age": 33, "Height_metres": 1.54, "Hair": "Black", "Passport": "None", "Features": "Beard", "Blood": "B"}
+    ];
+
+    function insertTemplate(query) {
+      document.getElementById('queryInput').value = query;
+      document.getElementById('queryInput').focus();
+    }
+
+    function clearQuery() {
+      document.getElementById('queryInput').value = '';
+      document.getElementById('resultsContainer').innerHTML = '<div class="empty-state">Run a query to see results</div>';
+      document.getElementById('resultsInfo').innerHTML = '';
+    }
+
+    function executeQuery() {
+      const query = document.getElementById('queryInput').value.trim();
+      const resultsContainer = document.getElementById('resultsContainer');
+      const resultsInfo = document.getElementById('resultsInfo');
+
+      if (!query) {
+        resultsInfo.className = 'results-info error';
+        resultsInfo.textContent = '❌ Error: Please enter a SQL query';
+        resultsContainer.innerHTML = '';
+        return;
+      }
+
+      try {
+        const results = parseSQLQuery(query, suspectsData);
+        displayResults(results, resultsContainer, resultsInfo);
+      } catch (error) {
+        resultsInfo.className = 'results-info error';
+        resultsInfo.textContent = `❌ Error: ${error.message}`;
+        resultsContainer.innerHTML = '';
+      }
+    }
+
+    function parseSQLQuery(query, data) {
+      const queryUpper = query.toUpperCase().trim();
+
+      // Handle COUNT queries
+      if (queryUpper.includes('COUNT(*)')) {
+        let filteredData = data;
+        const whereMatch = queryUpper.match(/WHERE\s+(.*?)$/i);
+        if (whereMatch) {
+          filteredData = applyWhere(data, whereMatch[1]);
+        }
+        return [{ Total: filteredData.length }];
+      }
+
+      // Parse SELECT
+      const selectMatch = queryUpper.match(/SELECT\s+(.*?)\s+FROM/i);
+      if (!selectMatch) throw new Error('Invalid SELECT syntax');
+      
+      const selectPart = selectMatch[1].trim();
+      let columns = [];
+      
+      if (selectPart === '*') {
+        columns = Object.keys(data[0]);
+      } else {
+        columns = selectPart.split(',').map(c => c.trim());
+      }
+
+      // Parse WHERE
+      let filteredData = data;
+      const whereMatch = queryUpper.match(/WHERE\s+(.*?)$/i);
+      if (whereMatch) {
+        filteredData = applyWhere(data, whereMatch[1]);
+      }
+
+      // Return only selected columns
+      return filteredData.map(row => {
+        const newRow = {};
+        columns.forEach(col => {
+          newRow[col] = row[col];
+        });
+        return newRow;
+      });
+    }
+
+    function applyWhere(data, whereClause) {
+      return data.filter(row => {
+        // Handle = comparisons
+        const eqMatch = whereClause.match(/(\w+)\s*=\s*['""]?([^'""]+)['""]?/i);
+        if (eqMatch) {
+          const [, field, value] = eqMatch;
+          return String(row[field]).toLowerCase() === String(value).toLowerCase();
+        }
+
+        // Handle > comparisons
+        const gtMatch = whereClause.match(/(\w+)\s*>\s*(\d+)/i);
+        if (gtMatch) {
+          const [, field, value] = gtMatch;
+          return Number(row[field]) > Number(value);
+        }
+
+        // Handle < comparisons
+        const ltMatch = whereClause.match(/(\w+)\s*<\s*(\d+)/i);
+        if (ltMatch) {
+          const [, field, value] = ltMatch;
+          return Number(row[field]) < Number(value);
+        }
+
+        // Handle LIKE comparisons
+        const likeMatch = whereClause.match(/(\w+)\s+LIKE\s+['""]?%?([^'""]+)%?['""]?/i);
+        if (likeMatch) {
+          const [, field, value] = likeMatch;
+          return String(row[field]).toLowerCase().includes(String(value).toLowerCase());
+        }
+
+        return true;
+      });
+    }
+
+    function displayResults(results, container, info) {
+      if (results.length === 0) {
+        info.className = 'results-info';
+        info.textContent = '📊 Query executed successfully - 0 rows returned';
+        container.innerHTML = '<div class="empty-state">No results found</div>';
+        return;
+      }
+
+      const columns = Object.keys(results[0]);
+      let html = '<table><thead><tr>';
+      
+      columns.forEach(col => {
+        html += `<th>${col}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      results.forEach(row => {
+        html += '<tr>';
+        columns.forEach(col => {
+          const value = row[col] === null ? 'NULL' : row[col];
+          html += `<td>${escapeHtml(String(value))}</td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+
+      info.className = 'results-info success';
+      info.textContent = `✅ Query executed successfully - ${results.length} row${results.length !== 1 ? 's' : ''} returned`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9a0c35c5ee8e49',t:'MTc3MDM3NDYxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
