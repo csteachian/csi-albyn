@@ -1,392 +1,444 @@
 <!doctype html>
 <html lang="en">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SQL Query Simulator</title>
-  <script src="/_sdk/element_sdk.js"></script>
-  <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQL Query Simulator</title>
+    <script src="/_sdk/element_sdk.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        html, body {
-            height: 100%;
-            width: 100%;
-        }
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+      }
 
-        body {
-            font-family: 'Fira Code', 'Courier New', monospace;
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-            color: #e0e0e0;
-            overflow: hidden;
-        }
+      body {
+        font-family: "Fira Code", "Courier New", monospace;
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+        color: #e0e0e0;
+        overflow: hidden;
+      }
 
-        .app-wrapper {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: row;
-            padding: 0;
-            gap: 0;
-            overflow: hidden;
-        }
+      .app-wrapper {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        padding: 0;
+        gap: 0;
+        overflow: hidden;
+      }
 
-        .sidebar {
-            width: 500px;
-            height: 100%;
-            background: rgba(10, 25, 47, 0.9);
-            border-right: 1px solid #00d4ff;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            flex-shrink: 0;
-        }
+      .sidebar {
+        width: 500px;
+        height: 100%;
+        background: rgba(10, 25, 47, 0.9);
+        border-right: 1px solid #00d4ff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+        flex-shrink: 0;
+      }
 
-        .sidebar-header {
-            padding: 16px;
-            border-bottom: 1px solid #00d4ff;
-            font-size: 13px;
-            font-weight: 600;
-            color: #00d4ff;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+      .sidebar-header {
+        padding: 16px;
+        border-bottom: 1px solid #00d4ff;
+        font-size: 13px;
+        font-weight: 600;
+        color: #00d4ff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-        .sidebar-content {
-            flex: 1;
-            overflow: auto;
-            padding: 0;
-        }
+      .sidebar-content {
+        flex: 1;
+        overflow: auto;
+        padding: 0;
+      }
 
-        .suspects-table-mini {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-        }
+      .suspects-table-mini {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+      }
 
-        .suspects-table-mini thead {
-            position: sticky;
-            top: 0;
-            background: rgba(0, 212, 255, 0.15);
-            border-bottom: 1px solid #00d4ff;
-            z-index: 2;
-        }
+      .suspects-table-mini thead {
+        position: sticky;
+        top: 0;
+        background: rgba(0, 212, 255, 0.15);
+        border-bottom: 1px solid #00d4ff;
+        z-index: 2;
+      }
 
-        .suspects-table-mini th {
-            padding: 8px 10px;
-            text-align: left;
-            color: #00d4ff;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            user-select: none;
-            background: rgba(0, 212, 255, 0.1);
-            min-width: max-content;
-        }
+      .suspects-table-mini th {
+        padding: 8px 10px;
+        text-align: left;
+        color: #00d4ff;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        user-select: none;
+        background: rgba(0, 212, 255, 0.1);
+        min-width: max-content;
+      }
 
-        .suspects-table-mini th:hover {
-            background: rgba(0, 212, 255, 0.15);
-        }
+      .suspects-table-mini th:hover {
+        background: rgba(0, 212, 255, 0.15);
+      }
 
-        .suspects-table-mini td {
-            padding: 8px 10px;
-            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
-            color: #b0b0b0;
-            white-space: nowrap;
-            min-width: max-content;
-        }
+      .suspects-table-mini td {
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        color: #b0b0b0;
+        white-space: nowrap;
+        min-width: max-content;
+      }
 
-        .suspects-table-mini tbody tr:hover {
-            background: rgba(0, 212, 255, 0.08);
-        }
+      .suspects-table-mini tbody tr:hover {
+        background: rgba(0, 212, 255, 0.08);
+      }
 
-        .resize-handle {
-            width: 6px;
-            height: 100%;
-            background: transparent;
-            cursor: col-resize;
-            position: absolute;
-            right: 0;
-            top: 0;
-            z-index: 10;
-        }
+      .resize-handle {
+        width: 6px;
+        height: 100%;
+        background: transparent;
+        cursor: col-resize;
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: 10;
+      }
 
-        .resize-handle:hover {
-            background: rgba(0, 212, 255, 0.5);
-        }
+      .resize-handle:hover {
+        background: rgba(0, 212, 255, 0.5);
+      }
 
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-            gap: 16px;
-            overflow: auto;
-        }
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        gap: 16px;
+        overflow: auto;
+      }
 
-        .header {
-            text-align: center;
-            margin-bottom: 8px;
-        }
+      .header {
+        text-align: center;
+        margin-bottom: 8px;
+      }
 
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 4px;
-        }
+      .header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #00d4ff, #0099cc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 4px;
+      }
 
-        .header p {
-            font-size: 12px;
-            color: #888;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+      .header p {
+        font-size: 12px;
+        color: #888;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
 
-        .query-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+      .query-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
 
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
+      .input-group {
+        display: flex;
+        gap: 8px;
+      }
 
-        #queryInput {
-            flex: 1;
-            padding: 12px 16px;
-            background: rgba(15, 52, 96, 0.6);
-            border: 1px solid #00d4ff;
-            border-radius: 6px;
-            color: #e0e0e0;
-            font-family: 'Fira Code', monospace;
-            font-size: 13px;
-            outline: none;
-            transition: all 0.3s ease;
-        }
+      #queryInput {
+        flex: 1;
+        padding: 12px 16px;
+        background: rgba(15, 52, 96, 0.6);
+        border: 1px solid #00d4ff;
+        border-radius: 6px;
+        color: #e0e0e0;
+        font-family: "Fira Code", monospace;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.3s ease;
+      }
 
-        #queryInput:focus {
-            background: rgba(15, 52, 96, 0.9);
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-        }
+      #queryInput:focus {
+        background: rgba(15, 52, 96, 0.9);
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+      }
 
-        .button-group {
-            display: flex;
-            gap: 8px;
-        }
+      .button-group {
+        display: flex;
+        gap: 8px;
+      }
 
-        button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-family: 'Fira Code', monospace;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+      button {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        font-family: "Fira Code", monospace;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-        #runBtn {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            color: #0f3460;
-            flex: 1;
-            min-width: 100px;
-        }
+      #runBtn {
+        background: linear-gradient(135deg, #00d4ff, #0099cc);
+        color: #0f3460;
+        flex: 1;
+        min-width: 100px;
+      }
 
-        #runBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
-        }
+      #runBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+      }
 
-        #runBtn:active {
-            transform: translateY(0);
-        }
+      #runBtn:active {
+        transform: translateY(0);
+      }
 
-        #clearBtn {
-            background: rgba(255, 79, 79, 0.2);
-            color: #ff4f4f;
-            border: 1px solid #ff4f4f;
-        }
+      #clearBtn {
+        background: rgba(255, 79, 79, 0.2);
+        color: #ff4f4f;
+        border: 1px solid #ff4f4f;
+      }
 
-        #clearBtn:hover {
-            background: rgba(255, 79, 79, 0.3);
-        }
+      #clearBtn:hover {
+        background: rgba(255, 79, 79, 0.3);
+      }
 
-        .template-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 8px;
-        }
+      .template-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 8px;
+      }
 
-        .template-btn {
-            padding: 8px 12px;
-            background: rgba(0, 212, 255, 0.1);
-            color: #00d4ff;
-            border: 1px solid #00d4ff;
-            font-size: 10px;
-            font-weight: 500;
-        }
+      .template-btn {
+        padding: 8px 12px;
+        background: rgba(0, 212, 255, 0.1);
+        color: #00d4ff;
+        border: 1px solid #00d4ff;
+        font-size: 10px;
+        font-weight: 500;
+      }
 
-        .template-btn:hover {
-            background: rgba(0, 212, 255, 0.2);
-        }
+      .template-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+      }
 
-        #statusMessage {
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            opacity: 0;
-            transition: all 0.3s ease;
-            transform: translateY(-10px);
-        }
+      #statusMessage {
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0;
+        transition: all 0.3s ease;
+        transform: translateY(-10px);
+      }
 
-        #statusMessage.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+      #statusMessage.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
 
-        #statusMessage.success {
-            background: rgba(76, 175, 80, 0.2);
-            border-left: 3px solid #4caf50;
-            color: #81c784;
-        }
+      #statusMessage.success {
+        background: rgba(76, 175, 80, 0.2);
+        border-left: 3px solid #4caf50;
+        color: #81c784;
+      }
 
-        #statusMessage.error {
-            background: rgba(244, 67, 54, 0.2);
-            border-left: 3px solid #f44336;
-            color: #ef5350;
-        }
+      #statusMessage.error {
+        background: rgba(244, 67, 54, 0.2);
+        border-left: 3px solid #f44336;
+        color: #ef5350;
+      }
 
-        #statusMessage.info {
-            background: rgba(33, 150, 243, 0.2);
-            border-left: 3px solid #2196f3;
-            color: #64b5f6;
-        }
+      #statusMessage.info {
+        background: rgba(33, 150, 243, 0.2);
+        border-left: 3px solid #2196f3;
+        color: #64b5f6;
+      }
 
-        #resultsContainer {
-            flex: 1;
-            overflow: auto;
-            background: rgba(15, 52, 96, 0.3);
-            border: 1px solid #00d4ff;
-            border-radius: 6px;
-            padding: 16px;
-        }
+      #resultsContainer {
+        flex: 1;
+        overflow: auto;
+        background: rgba(15, 52, 96, 0.3);
+        border: 1px solid #00d4ff;
+        border-radius: 6px;
+        padding: 16px;
+      }
 
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
+      .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
 
-        .results-table thead {
-            position: sticky;
-            top: 0;
-            background: rgba(0, 212, 255, 0.1);
-            border-bottom: 2px solid #00d4ff;
-        }
+      .results-table thead {
+        position: sticky;
+        top: 0;
+        background: rgba(0, 212, 255, 0.1);
+        border-bottom: 2px solid #00d4ff;
+      }
 
-        .results-table th {
-            padding: 12px;
-            text-align: left;
-            color: #00d4ff;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+      .results-table th {
+        padding: 12px;
+        text-align: left;
+        color: #00d4ff;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
 
-        .results-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
-            color: #e0e0e0;
-        }
+      .results-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        color: #e0e0e0;
+      }
 
-        .results-table tbody tr:hover {
-            background: rgba(0, 212, 255, 0.05);
-        }
+      .results-table tbody tr:hover {
+        background: rgba(0, 212, 255, 0.05);
+      }
 
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
-            color: #666;
-        }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: #666;
+      }
 
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
+      .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+      }
 
-        .empty-state-text {
-            font-size: 14px;
-            color: #888;
-        }
+      .empty-state-text {
+        font-size: 14px;
+        color: #888;
+      }
     </style>
-  <style>body { box-sizing: border-box; }</style>
-  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
- </head>
- <body>
-  <div class="app-wrapper">
-   <div class="sidebar">
-    <div class="sidebar-header">
-     📋 Suspects Database
+    <style>
+      body {
+        box-sizing: border-box;
+      }
+    </style>
+    <script
+      src="https://cdn.tailwindcss.com/3.4.17"
+      type="text/javascript"
+    ></script>
+    <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div class="sidebar">
+        <div class="sidebar-header">📋 Suspects Database</div>
+        <div class="sidebar-content">
+          <table class="suspects-table-mini" id="suspectsTable">
+            <thead>
+              <tr>
+                <th>No_</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Sex</th>
+                <th>Age</th>
+                <th>Height</th>
+                <th>Hair</th>
+                <th>Passport</th>
+                <th>Features</th>
+                <th>Blood</th>
+              </tr>
+            </thead>
+            <tbody id="suspectsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="resize-handle" id="resizeHandle"></div>
+      </div>
+      <div class="main-content">
+        <div class="header">
+          <h1>SQL Query Simulator</h1>
+          <p>Learn SQL with the Suspects Database</p>
+        </div>
+        <div class="query-section">
+          <div class="input-group">
+            <input
+              type="text"
+              id="queryInput"
+              placeholder="Enter your SQL query here... e.g., SELECT * FROM suspects WHERE age > 30"
+              autocomplete="off"
+            />
+          </div>
+          <div class="button-group">
+            <button id="runBtn" onclick="runQuery()">Run Query</button>
+            <button id="clearBtn" onclick="clearQuery()">Clear</button>
+          </div>
+          <div class="template-buttons">
+            <button class="template-btn" data-query="SELECT * FROM suspects">
+              Select All
+            </button>
+            <button
+              class="template-btn"
+              data-query="SELECT COUNT(*) FROM suspects"
+            >
+              Count All
+            </button>
+            <button
+              class="template-btn"
+              data-query="SELECT MAX(age) FROM suspects"
+            >
+              Max Age
+            </button>
+            <button
+              class="template-btn"
+              data-query="SELECT MIN(age) FROM suspects"
+            >
+              Min Age
+            </button>
+            <button
+              class="template-btn"
+              data-query="INSERT INTO suspects (name, surname, sex, age, height_metres, hair, passport, features, blood) VALUES ('John', 'Doe', 'Male', 35, 1.80, 'Black', 'American', 'None', 'O')"
+            >
+              Insert
+            </button>
+            <button
+              class="template-btn"
+              data-query="UPDATE suspects SET age = 40 WHERE name = 'John'"
+            >
+              Update
+            </button>
+            <button
+              class="template-btn"
+              data-query="DELETE FROM suspects WHERE age < 25"
+            >
+              Delete
+            </button>
+          </div>
+          <div id="statusMessage"></div>
+        </div>
+        <div id="resultsContainer"></div>
+      </div>
     </div>
-    <div class="sidebar-content">
-     <table class="suspects-table-mini" id="suspectsTable">
-      <thead>
-       <tr>
-        <th>No_</th>
-        <th>Name</th>
-        <th>Surname</th>
-        <th>Sex</th>
-        <th>Age</th>
-        <th>Height</th>
-        <th>Hair</th>
-        <th>Passport</th>
-        <th>Features</th>
-        <th>Blood</th>
-       </tr>
-      </thead>
-      <tbody id="suspectsTableBody">
-      </tbody>
-     </table>
-    </div>
-    <div class="resize-handle" id="resizeHandle"></div>
-   </div>
-   <div class="main-content">
-    <div class="header">
-     <h1>SQL Query Simulator</h1>
-     <p>Learn SQL with the Suspects Database</p>
-    </div>
-    <div class="query-section">
-     <div class="input-group"><input type="text" id="queryInput" placeholder="Enter your SQL query here... e.g., SELECT * FROM suspects WHERE age > 30" autocomplete="off">
-     </div>
-     <div class="button-group"><button id="runBtn" onclick="runQuery()">Run Query</button> <button id="clearBtn" onclick="clearQuery()">Clear</button>
-     </div>
-     <div class="template-buttons">
-      <button class="template-btn" data-query="SELECT * FROM suspects">Select All</button> <button class="template-btn" data-query="SELECT COUNT(*) FROM suspects">Count All</button> <button class="template-btn" data-query="SELECT MAX(age) FROM suspects">Max Age</button> <button class="template-btn" data-query="SELECT MIN(age) FROM suspects">Min Age</button> <button class="template-btn" data-query="INSERT INTO suspects (name, surname, sex, age, height_metres, hair, passport, features, blood) VALUES ('John', 'Doe', 'Male', 35, 1.80, 'Black', 'American', 'None', 'O')">Insert</button> <button class="template-btn" data-query="UPDATE suspects SET age = 40 WHERE name = 'John'">Update</button> <button class="template-btn" data-query="DELETE FROM suspects WHERE age < 25">Delete</button>
-     </div>
-     <div id="statusMessage"></div>
-    </div>
-    <div id="resultsContainer"></div>
-   </div>
-  </div>
-  <script>
+    <script>
+      /*
         // Database of 42 suspects
         const database = [
             { no_: 1, name: 'John', surname: 'Smith', sex: 'Male', age: 34, height_metres: 1.80, hair: 'Brown', passport: 'American', features: 'Tattoo', blood: 'O' },
@@ -432,13 +484,628 @@
             { no_: 41, name: 'Daniel', surname: 'Kim', sex: 'Male', age: 29, height_metres: 1.73, hair: 'Black', passport: 'Korean', features: 'None', blood: 'B' },
             { no_: 42, name: 'Karen', surname: 'Bianchi', sex: 'Female', age: 50, height_metres: 1.66, hair: 'Blonde', passport: 'Italian', features: 'Glasses', blood: 'AB' }
         ];
+        */
+      const database = [
+        {
+          no_: 1,
+          name: "Brian",
+          surname: "Malone",
+          sex: "Male",
+          age: 23,
+          height_metres: 1.5,
+          hair: "Black",
+          passport: "American",
+          features: "Moustache",
+          blood: "A",
+        },
+        {
+          no_: 2,
+          name: "Emma",
+          surname: "Hunter",
+          sex: "Female",
+          age: 31,
+          height_metres: 1.67,
+          hair: "Blonde",
+          passport: "None",
+          features: "Glasses",
+          blood: "O",
+        },
+        {
+          no_: 3,
+          name: "Reggie",
+          surname: "Smith",
+          sex: "Male",
+          age: 68,
+          height_metres: 1.71,
+          hair: "Bald",
+          passport: "None",
+          features: "Tattoo",
+          blood: "A",
+        },
+        {
+          no_: 4,
+          name: "Pete",
+          surname: "Bradshaw",
+          sex: "Male",
+          age: 34,
+          height_metres: 1.95,
+          hair: "Black",
+          passport: "None",
+          features: "Scar",
+          blood: "B",
+        },
+        {
+          no_: 5,
+          name: "Cynthia",
+          surname: "Brown",
+          sex: "Female",
+          age: 19,
+          height_metres: 1.65,
+          hair: "Brown",
+          passport: "None",
+          features: "Earring",
+          blood: "O",
+        },
+        {
+          no_: 6,
+          name: "Max",
+          surname: "Schmidt",
+          sex: "Male",
+          age: 32,
+          height_metres: 1.67,
+          hair: "Fair",
+          passport: "German",
+          features: "Earring",
+          blood: "B",
+        },
+        {
+          no_: 7,
+          name: "Pat",
+          surname: "Wood",
+          sex: "Male",
+          age: 65,
+          height_metres: 1.6,
+          hair: "Black",
+          passport: "None",
+          features: "Tattoo",
+          blood: "A",
+        },
+        {
+          no_: 8,
+          name: "Frank",
+          surname: "Lamb",
+          sex: "Male",
+          age: 55,
+          height_metres: 1.72,
+          hair: "Bald",
+          passport: "None",
+          features: "Beard",
+          blood: "B",
+        },
+        {
+          no_: 9,
+          name: "Rosemary",
+          surname: "Fisher",
+          sex: "Female",
+          age: 18,
+          height_metres: 1.75,
+          hair: "Brown",
+          passport: "None",
+          features: "Smoker",
+          blood: "O",
+        },
+        {
+          no_: 10,
+          name: "Patricia",
+          surname: "Flynn",
+          sex: "Female",
+          age: 25,
+          height_metres: 1.62,
+          hair: "Black",
+          passport: "None",
+          features: "Limps",
+          blood: "B",
+        },
+        {
+          no_: 11,
+          name: "Steffi",
+          surname: "Braun",
+          sex: "Female",
+          age: 44,
+          height_metres: 1.71,
+          hair: "Blonde",
+          passport: "German",
+          features: "Glasses",
+          blood: "A",
+        },
+        {
+          no_: 12,
+          name: "Susanne",
+          surname: "Le Bon",
+          sex: "Female",
+          age: 30,
+          height_metres: 1.73,
+          hair: "Black",
+          passport: "French",
+          features: "Eye patch",
+          blood: "O",
+        },
+        {
+          no_: 13,
+          name: "Kevin",
+          surname: "Carter",
+          sex: "Male",
+          age: 35,
+          height_metres: 1.61,
+          hair: "Brown",
+          passport: "None",
+          features: "Moustache",
+          blood: "O",
+        },
+        {
+          no_: 14,
+          name: "Boris",
+          surname: "Weiss",
+          sex: "Male",
+          age: 17,
+          height_metres: 1.69,
+          hair: "Black",
+          passport: "German",
+          features: "Earring",
+          blood: "B",
+        },
+        {
+          no_: 15,
+          name: "Rose",
+          surname: "Wilson",
+          sex: "Female",
+          age: 33,
+          height_metres: 1.9,
+          hair: "Blonde",
+          passport: "None",
+          features: "Earring",
+          blood: "A",
+        },
+        {
+          no_: 16,
+          name: "David",
+          surname: "Evans",
+          sex: "Male",
+          age: 29,
+          height_metres: 1.69,
+          hair: "Brown",
+          passport: "None",
+          features: "Deaf",
+          blood: "O",
+        },
+        {
+          no_: 17,
+          name: "Basil",
+          surname: "Smith",
+          sex: "Male",
+          age: 35,
+          height_metres: 1.75,
+          hair: "Bald",
+          passport: "None",
+          features: "Eye patch",
+          blood: "B",
+        },
+        {
+          no_: 18,
+          name: "Jose",
+          surname: "Sebastien",
+          sex: "Male",
+          age: 35,
+          height_metres: 1.74,
+          hair: "Black",
+          passport: "Spanish",
+          features: "Moustache",
+          blood: "A",
+        },
+        {
+          no_: 19,
+          name: "William",
+          surname: "Hacker",
+          sex: "Male",
+          age: 26,
+          height_metres: 1.62,
+          hair: "Black",
+          passport: "None",
+          features: "Beard",
+          blood: "A",
+        },
+        {
+          no_: 20,
+          name: "Sean",
+          surname: "Head",
+          sex: "Male",
+          age: 47,
+          height_metres: 1.69,
+          hair: "Black",
+          passport: "None",
+          features: "Moustache",
+          blood: "B",
+        },
+        {
+          no_: 21,
+          name: "Reggie",
+          surname: "Smart",
+          sex: "Male",
+          age: 36,
+          height_metres: 1.81,
+          hair: "Black",
+          passport: "None",
+          features: "Deaf",
+          blood: "O",
+        },
+        {
+          no_: 22,
+          name: "Rita",
+          surname: "Ferrari",
+          sex: "Female",
+          age: 29,
+          height_metres: 1.81,
+          hair: "Black",
+          passport: "Spanish",
+          features: "Tattoo",
+          blood: "O",
+        },
+        {
+          no_: 23,
+          name: "Matthew",
+          surname: "Morgan",
+          sex: "Male",
+          age: 65,
+          height_metres: 1.76,
+          hair: "Bald",
+          passport: "American",
+          features: "Glasses",
+          blood: "O",
+        },
+        {
+          no_: 24,
+          name: "Martin",
+          surname: "Mitchell",
+          sex: "Male",
+          age: 53,
+          height_metres: 1.96,
+          hair: "Fair",
+          passport: "None",
+          features: "Scar",
+          blood: "O",
+        },
+        {
+          no_: 25,
+          name: "Mary",
+          surname: "Morris",
+          sex: "Female",
+          age: 28,
+          height_metres: 1.9,
+          hair: "Black",
+          passport: "None",
+          features: "Earring",
+          blood: "A",
+        },
+        {
+          no_: 26,
+          name: "Stanley",
+          surname: "Smith",
+          sex: "Male",
+          age: 19,
+          height_metres: 1.77,
+          hair: "Fair",
+          passport: "American",
+          features: "Smoker",
+          blood: "O",
+        },
+        {
+          no_: 27,
+          name: "Toby",
+          surname: "Gunne",
+          sex: "Male",
+          age: 17,
+          height_metres: 1.66,
+          hair: "Brown",
+          passport: "None",
+          features: "Deaf",
+          blood: "A",
+        },
+        {
+          no_: 28,
+          name: "Patrick",
+          surname: "Brown",
+          sex: "Male",
+          age: 24,
+          height_metres: 2.08,
+          hair: "Black",
+          passport: "None",
+          features: "Scar",
+          blood: "B",
+        },
+        {
+          no_: 29,
+          name: "Francis",
+          surname: "Morgan",
+          sex: "Male",
+          age: 18,
+          height_metres: 1.64,
+          hair: "Brown",
+          passport: "None",
+          features: "Glasses",
+          blood: "A",
+        },
+        {
+          no_: 30,
+          name: "Marie",
+          surname: "Estelle",
+          sex: "Female",
+          age: 22,
+          height_metres: 1.63,
+          hair: "Black",
+          passport: "French",
+          features: "Glasses",
+          blood: "B",
+        },
+        {
+          no_: 31,
+          name: "John",
+          surname: "Harris",
+          sex: "Male",
+          age: 39,
+          height_metres: 1.64,
+          hair: "Brown",
+          passport: "None",
+          features: "Scar",
+          blood: "A",
+        },
+        {
+          no_: 32,
+          name: "Sam",
+          surname: "Smart",
+          sex: "Male",
+          age: 30,
+          height_metres: 1.72,
+          hair: "Fair",
+          passport: "None",
+          features: "Limps",
+          blood: "O",
+        },
+        {
+          no_: 33,
+          name: "Alan",
+          surname: "DaSilva",
+          sex: "Male",
+          age: 29,
+          height_metres: 1.94,
+          hair: "Brown",
+          passport: "American",
+          features: "Moustache",
+          blood: "O",
+        },
+        {
+          no_: 34,
+          name: "Ruth",
+          surname: "Flynn",
+          sex: "Female",
+          age: 56,
+          height_metres: 1.86,
+          hair: "Black",
+          passport: "None",
+          features: "Perfume",
+          blood: "A",
+        },
+        {
+          no_: 35,
+          name: "Andrew",
+          surname: "Campbell",
+          sex: "Male",
+          age: 30,
+          height_metres: 1.66,
+          hair: "Fair",
+          passport: "None",
+          features: "Scar",
+          blood: "O",
+        },
+        {
+          no_: 36,
+          name: "Pierre",
+          surname: "Blanc",
+          sex: "Male",
+          age: 65,
+          height_metres: 1.65,
+          hair: "Black",
+          passport: "French",
+          features: "Moustache",
+          blood: "B",
+        },
+        {
+          no_: 37,
+          name: "Lucy",
+          surname: "Smith",
+          sex: "Female",
+          age: 55,
+          height_metres: 1.68,
+          hair: "Blonde",
+          passport: "None",
+          features: "Smoker",
+          blood: "A",
+        },
+        {
+          no_: 38,
+          name: "Sonnie",
+          surname: "Bakker",
+          sex: "Female",
+          age: 65,
+          height_metres: 1.75,
+          hair: "Blonde",
+          passport: "Dutch",
+          features: "Glasses",
+          blood: "O",
+        },
+        {
+          no_: 39,
+          name: "Percy",
+          surname: "Blake",
+          sex: "Male",
+          age: 25,
+          height_metres: 1.57,
+          hair: "Black",
+          passport: "None",
+          features: "Scar",
+          blood: "A",
+        },
+        {
+          no_: 40,
+          name: "Jim",
+          surname: "Wilton",
+          sex: "Male",
+          age: 21,
+          height_metres: 1.71,
+          hair: "Brown",
+          passport: "None",
+          features: "Tattoo",
+          blood: "O",
+        },
+        {
+          no_: 41,
+          name: "Sam",
+          surname: "Simpson",
+          sex: "Male",
+          age: 41,
+          height_metres: 1.56,
+          hair: "Brown",
+          passport: "American",
+          features: "Limps",
+          blood: "O",
+        },
+        {
+          no_: 42,
+          name: "Harry",
+          surname: "Sloan",
+          sex: "Male",
+          age: 33,
+          height_metres: 1.54,
+          hair: "Brown",
+          passport: "American",
+          features: "Earring",
+          blood: "O",
+        },
+        {
+          no_: 43,
+          name: "Patricia",
+          surname: "Bryant",
+          sex: "Female",
+          age: 41,
+          height_metres: 1.79,
+          hair: "Blonde",
+          passport: "None",
+          features: "Perfume",
+          blood: "A",
+        },
+        {
+          no_: 44,
+          name: "Mike",
+          surname: "Grant",
+          sex: "Male",
+          age: 67,
+          height_metres: 1.69,
+          hair: "Bald",
+          passport: "None",
+          features: "Beard",
+          blood: "B",
+        },
+        {
+          no_: 45,
+          name: "Claude",
+          surname: "Hopper",
+          sex: "Male",
+          age: 18,
+          height_metres: 1.62,
+          hair: "Fair",
+          passport: "French",
+          features: "Limps",
+          blood: "A",
+        },
+        {
+          no_: 46,
+          name: "Percy",
+          surname: "Smith",
+          sex: "Male",
+          age: 54,
+          height_metres: 1.75,
+          hair: "Brown",
+          passport: "None",
+          features: "Eye patch",
+          blood: "A",
+        },
+        {
+          no_: 47,
+          name: "John",
+          surname: "Dobson",
+          sex: "Male",
+          age: 31,
+          height_metres: 1.74,
+          hair: "Brown",
+          passport: "None",
+          features: "Glasses",
+          blood: "O",
+        },
+        {
+          no_: 48,
+          name: "Mary",
+          surname: "Walsh",
+          sex: "Female",
+          age: 41,
+          height_metres: 1.8,
+          hair: "Blonde",
+          passport: "None",
+          features: "Earring",
+          blood: "A",
+        },
+        {
+          no_: 49,
+          name: "Wolfgang",
+          surname: "Rifter",
+          sex: "Male",
+          age: 27,
+          height_metres: 1.63,
+          hair: "Fair",
+          passport: "German",
+          features: "Beard",
+          blood: "B",
+        },
+        {
+          no_: 50,
+          name: "Steve",
+          surname: "Smith",
+          sex: "Male",
+          age: 45,
+          height_metres: 1.54,
+          hair: "Fair",
+          passport: "None",
+          features: "Eye patch",
+          blood: "O",
+        },
+        {
+          no_: 51,
+          name: "Celine",
+          surname: "Dion",
+          sex: "Female",
+          age: 46,
+          height_metres: 1.86,
+          hair: "Brown",
+          passport: "Canadian",
+          features: "Scar",
+          blood: "A",
+        },
+      ];
 
-        // Initialize sidebar with suspects data
-        function initializeSidebar() {
-            const tbody = document.getElementById('suspectsTableBody');
-            database.forEach(suspect => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+      // Initialize sidebar with suspects data
+      function initializeSidebar() {
+        const tbody = document.getElementById("suspectsTableBody");
+        database.forEach((suspect) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
                     <td>${suspect.no_}</td>
                     <td>${suspect.name}</td>
                     <td>${suspect.surname}</td>
@@ -450,712 +1117,930 @@
                     <td>${suspect.features}</td>
                     <td>${suspect.blood}</td>
                 `;
-                tbody.appendChild(row);
-            });
-        }
+          tbody.appendChild(row);
+        });
+      }
 
-        // Resizable sidebar functionality
-        function initializeResize() {
-            const sidebar = document.querySelector('.sidebar');
-            const handle = document.getElementById('resizeHandle');
-            let isResizing = false;
+      // Resizable sidebar functionality
+      function initializeResize() {
+        const sidebar = document.querySelector(".sidebar");
+        const handle = document.getElementById("resizeHandle");
+        let isResizing = false;
 
-            handle.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                e.preventDefault();
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isResizing) return;
-                const newWidth = e.clientX;
-                if (newWidth > 200 && newWidth < 800) {
-                    sidebar.style.width = newWidth + 'px';
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isResizing = false;
-            });
-        }
-
-        function loadTemplate(query) {
-            document.getElementById('queryInput').value = query;
-            document.getElementById('queryInput').focus();
-        }
-
-        // Setup template buttons
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.template-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const query = this.getAttribute('data-query');
-                    loadTemplate(query);
-                });
-            });
+        handle.addEventListener("mousedown", (e) => {
+          isResizing = true;
+          e.preventDefault();
         });
 
-        function clearQuery() {
-            document.getElementById('queryInput').value = '';
-            document.getElementById('queryInput').focus();
-            clearStatus();
-            showEmptyState();
-        }
+        document.addEventListener("mousemove", (e) => {
+          if (!isResizing) return;
+          const newWidth = e.clientX;
+          if (newWidth > 200 && newWidth < 800) {
+            sidebar.style.width = newWidth + "px";
+          }
+        });
 
-        function showStatus(message, type) {
-            const statusEl = document.getElementById('statusMessage');
-            statusEl.textContent = message;
-            statusEl.className = `status-message show ${type}`;
-        }
+        document.addEventListener("mouseup", () => {
+          isResizing = false;
+        });
+      }
 
-        function clearStatus() {
-            const statusEl = document.getElementById('statusMessage');
-            statusEl.className = 'status-message';
-        }
+      function loadTemplate(query) {
+        document.getElementById("queryInput").value = query;
+        document.getElementById("queryInput").focus();
+      }
 
-        function showEmptyState() {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `
+      // Setup template buttons
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".template-btn").forEach((btn) => {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const query = this.getAttribute("data-query");
+            loadTemplate(query);
+          });
+        });
+      });
+
+      function clearQuery() {
+        document.getElementById("queryInput").value = "";
+        document.getElementById("queryInput").focus();
+        clearStatus();
+        showEmptyState();
+      }
+
+      function showStatus(message, type) {
+        const statusEl = document.getElementById("statusMessage");
+        statusEl.textContent = message;
+        statusEl.className = `status-message show ${type}`;
+      }
+
+      function clearStatus() {
+        const statusEl = document.getElementById("statusMessage");
+        statusEl.className = "status-message";
+      }
+
+      function showEmptyState() {
+        const container = document.getElementById("resultsContainer");
+        container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">📊</div>
                     <p class="empty-state-text">Run a query to see results</p>
                 </div>
             `;
+      }
+
+      function executeSQLQuery(query) {
+        const upperQuery = query.toUpperCase();
+
+        let queryType = null;
+        if (upperQuery.startsWith("SELECT")) queryType = "SELECT";
+        else if (upperQuery.startsWith("INSERT")) queryType = "INSERT";
+        else if (upperQuery.startsWith("UPDATE")) queryType = "UPDATE";
+        else if (upperQuery.startsWith("DELETE")) queryType = "DELETE";
+        else {
+          return {
+            error:
+              "Only SELECT, INSERT, UPDATE, and DELETE queries are supported. Your query must start with one of these keywords.",
+          };
         }
 
-        function executeSQLQuery(query) {
-            const upperQuery = query.toUpperCase();
-            
-            let queryType = null;
-            if (upperQuery.startsWith('SELECT')) queryType = 'SELECT';
-            else if (upperQuery.startsWith('INSERT')) queryType = 'INSERT';
-            else if (upperQuery.startsWith('UPDATE')) queryType = 'UPDATE';
-            else if (upperQuery.startsWith('DELETE')) queryType = 'DELETE';
-            else {
-                return { error: 'Only SELECT, INSERT, UPDATE, and DELETE queries are supported. Your query must start with one of these keywords.' };
-            }
-
-            if (!upperQuery.includes('SUSPECTS')) {
-                return { error: 'Table not found. Use the "suspects" table. Example: SELECT * FROM suspects' };
-            }
-
-            if (queryType === 'SELECT') {
-                return executeSelectQuery(query);
-            } else if (queryType === 'INSERT') {
-                return executeInsertQuery(query);
-            } else if (queryType === 'UPDATE') {
-                return executeUpdateQuery(query);
-            } else if (queryType === 'DELETE') {
-                return executeDeleteQuery(query);
-            }
+        if (!upperQuery.includes("SUSPECTS")) {
+          return {
+            error:
+              'Table not found. Use the "suspects" table. Example: SELECT * FROM suspects',
+          };
         }
 
-        function executeSelectQuery(query) {
-            const upperQuery = query.toUpperCase();
-            
-            if (!upperQuery.includes('FROM')) {
-                return { error: 'Missing FROM clause. Use: SELECT columns FROM suspects' };
+        if (queryType === "SELECT") {
+          return executeSelectQuery(query);
+        } else if (queryType === "INSERT") {
+          return executeInsertQuery(query);
+        } else if (queryType === "UPDATE") {
+          return executeUpdateQuery(query);
+        } else if (queryType === "DELETE") {
+          return executeDeleteQuery(query);
+        }
+      }
+
+      function executeSelectQuery(query) {
+        const upperQuery = query.toUpperCase();
+
+        if (!upperQuery.includes("FROM")) {
+          return {
+            error: "Missing FROM clause. Use: SELECT columns FROM suspects",
+          };
+        }
+
+        const selectMatch = query.match(/SELECT\s+([\s\S]*?)\s+FROM/i);
+        if (!selectMatch) {
+          return {
+            error:
+              "Invalid SELECT syntax. Use: SELECT column_name FROM suspects",
+          };
+        }
+
+        const selectPart = selectMatch[1].trim();
+        let columns = [];
+        let isAggregateQuery = false;
+        let aggregateFunctions = {};
+        let groupByColumns = [];
+
+        // Check for GROUP BY
+        const groupByMatch = query.match(
+          /GROUP\s+BY\s+([\s\S]*?)(?:ORDER\s+BY|LIMIT|$)/i,
+        );
+        const hasGroupBy = !!groupByMatch;
+
+        if (hasGroupBy) {
+          const groupByPart = groupByMatch[1].trim();
+          groupByColumns = groupByPart
+            .split(",")
+            .map((col) => col.trim().toLowerCase());
+
+          const validColumns = Object.keys(database[0]);
+          for (const col of groupByColumns) {
+            if (!validColumns.some((vc) => vc.toLowerCase() === col)) {
+              return {
+                error: `Column "${col}" not found in GROUP BY. Available columns: ${validColumns.join(", ")}`,
+              };
+            }
+          }
+        }
+
+        if (/COUNT|SUM|AVG|MAX|MIN/i.test(selectPart)) {
+          isAggregateQuery = true;
+
+          const aggRegex =
+            /(COUNT|SUM|AVG|MAX|MIN)\s*\(\s*(\*|[\w_]+)\s*\)\s*(?:as\s+(\w+))?/gi;
+          let match;
+          let hasMatch = false;
+
+          while ((match = aggRegex.exec(selectPart)) !== null) {
+            hasMatch = true;
+            const func = match[1].toUpperCase();
+            const field =
+              match[2].toUpperCase() === "*" ? "*" : match[2].toLowerCase();
+            const alias = match[3]
+              ? match[3].toLowerCase()
+              : `${func.toLowerCase()}(${field})`;
+            aggregateFunctions[alias] = { func, field };
+          }
+
+          if (!hasMatch && hasGroupBy) {
+            return {
+              error:
+                "GROUP BY requires aggregate functions. Use: SELECT column, COUNT(*) FROM suspects GROUP BY column",
+            };
+          }
+
+          if (!hasMatch && !hasGroupBy) {
+            return {
+              error:
+                "Invalid aggregate function syntax. Use: COUNT(*), SUM(age), AVG(age), MAX(age), MIN(age)",
+            };
+          }
+
+          columns = Object.keys(aggregateFunctions);
+        } else if (selectPart === "*") {
+          columns = Object.keys(database[0]);
+        } else {
+          columns = selectPart
+            .split(",")
+            .map((col) => col.trim().toLowerCase());
+
+          const validColumns = Object.keys(database[0]);
+          for (const col of columns) {
+            const baseCol = col.split(" as ")[0].trim();
+            if (!validColumns.some((vc) => vc.toLowerCase() === baseCol)) {
+              return {
+                error: `Column "${baseCol}" not found. Available columns: ${validColumns.join(", ")}`,
+              };
+            }
+          }
+        }
+
+        let data = JSON.parse(JSON.stringify(database));
+
+        const whereMatch = query.match(
+          /WHERE\s+([\s\S]*?)(?:ORDER\s+BY|GROUP\s+BY|LIMIT|$)/i,
+        );
+        if (whereMatch) {
+          const whereClause = whereMatch[1].trim();
+          const whereResult = parseWhereClause(whereClause, data);
+
+          if (whereResult.error) {
+            return { error: whereResult.error };
+          }
+
+          data = whereResult.data;
+        }
+
+        // Handle GROUP BY
+        if (hasGroupBy) {
+          const groups = {};
+
+          // Group data by the specified columns
+          data.forEach((row) => {
+            const groupKey = groupByColumns.map((col) => row[col]).join("|");
+            if (!groups[groupKey]) {
+              groups[groupKey] = [];
+            }
+            groups[groupKey].push(row);
+          });
+
+          // Compute aggregates for each group
+          data = Object.entries(groups).map(([groupKey, groupRows]) => {
+            const groupValues = groupKey.split("|");
+            const result = {};
+
+            // Add group by columns
+            groupByColumns.forEach((col, idx) => {
+              result[col] = groupValues[idx];
+            });
+
+            // Compute aggregates
+            for (const [alias, { func, field }] of Object.entries(
+              aggregateFunctions,
+            )) {
+              if (func === "COUNT") {
+                result[alias] = groupRows.length;
+              } else if (func === "SUM") {
+                if (field === "*") {
+                  return {
+                    error:
+                      "SUM requires a column name. Use: SUM(column_name) not SUM(*)",
+                  };
+                }
+                result[alias] = groupRows.reduce(
+                  (sum, row) => sum + (parseFloat(row[field]) || 0),
+                  0,
+                );
+              } else if (func === "AVG") {
+                if (field === "*") {
+                  return {
+                    error:
+                      "AVG requires a column name. Use: AVG(column_name) not AVG(*)",
+                  };
+                }
+                const sum = groupRows.reduce(
+                  (sum, row) => sum + (parseFloat(row[field]) || 0),
+                  0,
+                );
+                result[alias] =
+                  groupRows.length > 0
+                    ? parseFloat((sum / groupRows.length).toFixed(2))
+                    : 0;
+              } else if (func === "MAX") {
+                if (field === "*") {
+                  return {
+                    error:
+                      "MAX requires a column name. Use: MAX(column_name) not MAX(*)",
+                  };
+                }
+                result[alias] = Math.max(
+                  ...groupRows.map(
+                    (row) => parseFloat(row[field]) || -Infinity,
+                  ),
+                );
+              } else if (func === "MIN") {
+                if (field === "*") {
+                  return {
+                    error:
+                      "MIN requires a column name. Use: MIN(column_name) not MIN(*)",
+                  };
+                }
+                result[alias] = Math.min(
+                  ...groupRows.map((row) => parseFloat(row[field]) || Infinity),
+                );
+              }
             }
 
-            const selectMatch = query.match(/SELECT\s+([\s\S]*?)\s+FROM/i);
-            if (!selectMatch) {
-                return { error: 'Invalid SELECT syntax. Use: SELECT column_name FROM suspects' };
+            return result;
+          });
+        } else if (isAggregateQuery) {
+          const result = {};
+
+          for (const [alias, { func, field }] of Object.entries(
+            aggregateFunctions,
+          )) {
+            if (func === "COUNT") {
+              result[alias] = data.length;
+            } else if (func === "SUM") {
+              if (field === "*") {
+                return {
+                  error:
+                    "SUM requires a column name. Use: SUM(column_name) not SUM(*)",
+                };
+              }
+              result[alias] = data.reduce(
+                (sum, row) => sum + (parseFloat(row[field]) || 0),
+                0,
+              );
+            } else if (func === "AVG") {
+              if (field === "*") {
+                return {
+                  error:
+                    "AVG requires a column name. Use: AVG(column_name) not AVG(*)",
+                };
+              }
+              const sum = data.reduce(
+                (sum, row) => sum + (parseFloat(row[field]) || 0),
+                0,
+              );
+              result[alias] =
+                data.length > 0 ? (sum / data.length).toFixed(2) : 0;
+            } else if (func === "MAX") {
+              if (field === "*") {
+                return {
+                  error:
+                    "MAX requires a column name. Use: MAX(column_name) not MAX(*)",
+                };
+              }
+              result[alias] = Math.max(
+                ...data.map((row) => parseFloat(row[field]) || -Infinity),
+              );
+            } else if (func === "MIN") {
+              if (field === "*") {
+                return {
+                  error:
+                    "MIN requires a column name. Use: MIN(column_name) not MIN(*)",
+                };
+              }
+              result[alias] = Math.min(
+                ...data.map((row) => parseFloat(row[field]) || Infinity),
+              );
             }
-            
-            const selectPart = selectMatch[1].trim();
-            let columns = [];
-            let isAggregateQuery = false;
-            let aggregateFunctions = {};
-            let groupByColumns = [];
+          }
 
-            // Check for GROUP BY
-            const groupByMatch = query.match(/GROUP\s+BY\s+([\s\S]*?)(?:ORDER\s+BY|LIMIT|$)/i);
-            const hasGroupBy = !!groupByMatch;
-            
-            if (hasGroupBy) {
-                const groupByPart = groupByMatch[1].trim();
-                groupByColumns = groupByPart.split(',').map(col => col.trim().toLowerCase());
-                
-                const validColumns = Object.keys(database[0]);
-                for (const col of groupByColumns) {
-                    if (!validColumns.some(vc => vc.toLowerCase() === col)) {
-                        return { error: `Column "${col}" not found in GROUP BY. Available columns: ${validColumns.join(', ')}` };
-                    }
-                }
-            }
+          return { data: [result] };
+        }
 
-            if (/COUNT|SUM|AVG|MAX|MIN/i.test(selectPart)) {
-                isAggregateQuery = true;
-                
-                const aggRegex = /(COUNT|SUM|AVG|MAX|MIN)\s*\(\s*(\*|[\w_]+)\s*\)\s*(?:as\s+(\w+))?/gi;
-                let match;
-                let hasMatch = false;
-                
-                while ((match = aggRegex.exec(selectPart)) !== null) {
-                    hasMatch = true;
-                    const func = match[1].toUpperCase();
-                    const field = match[2].toUpperCase() === '*' ? '*' : match[2].toLowerCase();
-                    const alias = match[3] ? match[3].toLowerCase() : `${func.toLowerCase()}(${field})`;
-                    aggregateFunctions[alias] = { func, field };
-                }
+        const orderMatch = query.match(
+          /ORDER\s+BY\s+([\w_]+)(?:\s+(ASC|DESC))?/i,
+        );
+        if (orderMatch) {
+          const orderColumn = orderMatch[1].toLowerCase();
+          const orderDirection = (orderMatch[2] || "ASC").toUpperCase();
 
-                if (!hasMatch && hasGroupBy) {
-                    return { error: 'GROUP BY requires aggregate functions. Use: SELECT column, COUNT(*) FROM suspects GROUP BY column' };
-                }
+          // Check if orderColumn exists in data results (handles aliases and GROUP BY columns)
+          if (
+            data.length > 0 &&
+            !Object.keys(data[0]).some(
+              (col) => col.toLowerCase() === orderColumn,
+            )
+          ) {
+            return {
+              error: `Column "${orderColumn}" not found for ORDER BY. Available columns: ${Object.keys(data[0]).join(", ")}`,
+            };
+          }
 
-                if (!hasMatch && !hasGroupBy) {
-                    return { error: 'Invalid aggregate function syntax. Use: COUNT(*), SUM(age), AVG(age), MAX(age), MIN(age)' };
-                }
+          data.sort((a, b) => {
+            const aVal = a[orderColumn];
+            const bVal = b[orderColumn];
 
-                columns = Object.keys(aggregateFunctions);
-            } else if (selectPart === '*') {
-                columns = Object.keys(database[0]);
+            if (typeof aVal === "string") {
+              return orderDirection === "ASC"
+                ? aVal.localeCompare(bVal)
+                : bVal.localeCompare(aVal);
             } else {
-                columns = selectPart.split(',').map(col => col.trim().toLowerCase());
-                
-                const validColumns = Object.keys(database[0]);
-                for (const col of columns) {
-                    const baseCol = col.split(' as ')[0].trim();
-                    if (!validColumns.some(vc => vc.toLowerCase() === baseCol)) {
-                        return { error: `Column "${baseCol}" not found. Available columns: ${validColumns.join(', ')}` };
-                    }
-                }
+              return orderDirection === "ASC" ? aVal - bVal : bVal - aVal;
             }
-
-            let data = JSON.parse(JSON.stringify(database));
-
-            const whereMatch = query.match(/WHERE\s+([\s\S]*?)(?:ORDER\s+BY|GROUP\s+BY|LIMIT|$)/i);
-            if (whereMatch) {
-                const whereClause = whereMatch[1].trim();
-                const whereResult = parseWhereClause(whereClause, data);
-                
-                if (whereResult.error) {
-                    return { error: whereResult.error };
-                }
-                
-                data = whereResult.data;
-            }
-
-            // Handle GROUP BY
-            if (hasGroupBy) {
-                const groups = {};
-                
-                // Group data by the specified columns
-                data.forEach(row => {
-                    const groupKey = groupByColumns.map(col => row[col]).join('|');
-                    if (!groups[groupKey]) {
-                        groups[groupKey] = [];
-                    }
-                    groups[groupKey].push(row);
-                });
-
-                // Compute aggregates for each group
-                data = Object.entries(groups).map(([groupKey, groupRows]) => {
-                    const groupValues = groupKey.split('|');
-                    const result = {};
-                    
-                    // Add group by columns
-                    groupByColumns.forEach((col, idx) => {
-                        result[col] = groupValues[idx];
-                    });
-                    
-                    // Compute aggregates
-                    for (const [alias, { func, field }] of Object.entries(aggregateFunctions)) {
-                        if (func === 'COUNT') {
-                            result[alias] = groupRows.length;
-                        } else if (func === 'SUM') {
-                            if (field === '*') {
-                                return { error: 'SUM requires a column name. Use: SUM(column_name) not SUM(*)' };
-                            }
-                            result[alias] = groupRows.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
-                        } else if (func === 'AVG') {
-                            if (field === '*') {
-                                return { error: 'AVG requires a column name. Use: AVG(column_name) not AVG(*)' };
-                            }
-                            const sum = groupRows.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
-                            result[alias] = groupRows.length > 0 ? parseFloat((sum / groupRows.length).toFixed(2)) : 0;
-                        } else if (func === 'MAX') {
-                            if (field === '*') {
-                                return { error: 'MAX requires a column name. Use: MAX(column_name) not MAX(*)' };
-                            }
-                            result[alias] = Math.max(...groupRows.map(row => parseFloat(row[field]) || -Infinity));
-                        } else if (func === 'MIN') {
-                            if (field === '*') {
-                                return { error: 'MIN requires a column name. Use: MIN(column_name) not MIN(*)' };
-                            }
-                            result[alias] = Math.min(...groupRows.map(row => parseFloat(row[field]) || Infinity));
-                        }
-                    }
-                    
-                    return result;
-                });
-            } else if (isAggregateQuery) {
-                const result = {};
-                
-                for (const [alias, { func, field }] of Object.entries(aggregateFunctions)) {
-                    if (func === 'COUNT') {
-                        result[alias] = data.length;
-                    } else if (func === 'SUM') {
-                        if (field === '*') {
-                            return { error: 'SUM requires a column name. Use: SUM(column_name) not SUM(*)' };
-                        }
-                        result[alias] = data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
-                    } else if (func === 'AVG') {
-                        if (field === '*') {
-                            return { error: 'AVG requires a column name. Use: AVG(column_name) not AVG(*)' };
-                        }
-                        const sum = data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
-                        result[alias] = data.length > 0 ? (sum / data.length).toFixed(2) : 0;
-                    } else if (func === 'MAX') {
-                        if (field === '*') {
-                            return { error: 'MAX requires a column name. Use: MAX(column_name) not MAX(*)' };
-                        }
-                        result[alias] = Math.max(...data.map(row => parseFloat(row[field]) || -Infinity));
-                    } else if (func === 'MIN') {
-                        if (field === '*') {
-                            return { error: 'MIN requires a column name. Use: MIN(column_name) not MIN(*)' };
-                        }
-                        result[alias] = Math.min(...data.map(row => parseFloat(row[field]) || Infinity));
-                    }
-                }
-                
-                return { data: [result] };
-            }
-
-            const orderMatch = query.match(/ORDER\s+BY\s+([\w_]+)(?:\s+(ASC|DESC))?/i);
-            if (orderMatch) {
-                const orderColumn = orderMatch[1].toLowerCase();
-                const orderDirection = (orderMatch[2] || 'ASC').toUpperCase();
-                
-                // Check if orderColumn exists in data results (handles aliases and GROUP BY columns)
-                if (data.length > 0 && !Object.keys(data[0]).some(col => col.toLowerCase() === orderColumn)) {
-                    return { error: `Column "${orderColumn}" not found for ORDER BY. Available columns: ${Object.keys(data[0]).join(', ')}` };
-                }
-                
-                data.sort((a, b) => {
-                    const aVal = a[orderColumn];
-                    const bVal = b[orderColumn];
-                    
-                    if (typeof aVal === 'string') {
-                        return orderDirection === 'ASC' 
-                            ? aVal.localeCompare(bVal)
-                            : bVal.localeCompare(aVal);
-                    } else {
-                        return orderDirection === 'ASC' 
-                            ? aVal - bVal
-                            : bVal - aVal;
-                    }
-                });
-            }
-
-            const limitMatch = query.match(/LIMIT\s+(\d+)/i);
-            if (limitMatch) {
-                const limit = parseInt(limitMatch[1]);
-                data = data.slice(0, limit);
-            }
-
-            if (selectPart !== '*' && !hasGroupBy && !isAggregateQuery) {
-                data = data.map(row => {
-                    const newRow = {};
-                    columns.forEach(col => {
-                        const baseCol = col.split(' as ')[0].trim();
-                        const alias = col.includes(' as ') ? col.split(' as ')[1].trim() : baseCol;
-                        newRow[alias] = row[baseCol] || row[baseCol.toLowerCase()] || null;
-                    });
-                    return newRow;
-                });
-            }
-
-            return { data };
+          });
         }
 
-        function parseValuesString(valueStr) {
-            const values = [];
-            let current = '';
-            let inQuotes = false;
-            let quoteChar = '';
-
-            for (let i = 0; i < valueStr.length; i++) {
-                const char = valueStr[i];
-                
-                if ((char === '"' || char === "'") && !inQuotes) {
-                    inQuotes = true;
-                    quoteChar = char;
-                } else if (char === quoteChar && inQuotes) {
-                    inQuotes = false;
-                } else if (char === ',' && !inQuotes) {
-                    values.push(current.trim());
-                    current = '';
-                    continue;
-                }
-                current += char;
-            }
-            if (current.trim()) {
-                values.push(current.trim());
-            }
-            return values;
+        const limitMatch = query.match(/LIMIT\s+(\d+)/i);
+        if (limitMatch) {
+          const limit = parseInt(limitMatch[1]);
+          data = data.slice(0, limit);
         }
 
-        function executeInsertQuery(query) {
-            const valuesIndex = query.toUpperCase().indexOf('VALUES');
-            if (valuesIndex === -1) {
-                return { error: 'Invalid INSERT syntax. Use: INSERT INTO suspects (column1, column2) VALUES (value1, value2)' };
-            }
-
-            const beforeValues = query.substring(0, valuesIndex);
-            const afterValues = query.substring(valuesIndex + 6).trim();
-
-            const insertMatch = beforeValues.match(/INSERT\s+INTO\s+(\w+)\s*\((.*?)\)/i);
-            if (!insertMatch) {
-                return { error: 'Invalid INSERT syntax. Use: INSERT INTO suspects (column1, column2) VALUES (value1, value2)' };
-            }
-
-            const tableName = insertMatch[1];
-            if (tableName.toLowerCase() !== 'suspects') {
-                return { error: `Table "${tableName}" not found. Use: INSERT INTO suspects (columns) VALUES (values)` };
-            }
-
-            const columnsStr = insertMatch[2];
-            const columns = columnsStr.split(',').map(col => col.trim().toLowerCase());
-
-            const valuesMatch = afterValues.match(/^\((.*)\)$/);
-            if (!valuesMatch) {
-                return { error: 'Invalid VALUES syntax. Use: VALUES (value1, value2, ...)' };
-            }
-
-            const values = parseValuesString(valuesMatch[1]);
-
-            if (columns.length !== values.length) {
-                return { error: `Column count (${columns.length}) does not match value count (${values.length}). Provide same number of columns and values.` };
-            }
-
-            const validColumns = Object.keys(database[0]);
-            for (const col of columns) {
-                if (!validColumns.some(vc => vc.toLowerCase() === col)) {
-                    return { error: `Column "${col}" not found. Available columns: ${validColumns.join(', ')}` };
-                }
-            }
-
-            const newRecord = {};
-            let nextNo = Math.max(...database.map(r => r.no_)) + 1;
-            newRecord.no_ = nextNo;
-
-            validColumns.forEach(col => {
-                if (col !== 'no_') {
-                    newRecord[col] = null;
-                }
+        if (selectPart !== "*" && !hasGroupBy && !isAggregateQuery) {
+          data = data.map((row) => {
+            const newRow = {};
+            columns.forEach((col) => {
+              const baseCol = col.split(" as ")[0].trim();
+              const alias = col.includes(" as ")
+                ? col.split(" as ")[1].trim()
+                : baseCol;
+              newRow[alias] =
+                row[baseCol] || row[baseCol.toLowerCase()] || null;
             });
+            return newRow;
+          });
+        }
 
-            for (let i = 0; i < columns.length; i++) {
-                let value = values[i].replace(/^['"]|['"]$/g, '');
-                
-                if (!isNaN(value) && value !== '') {
-                    value = parseFloat(value);
-                }
-                
-                newRecord[columns[i]] = value;
-            }
+        return { data };
+      }
 
-            database.push(newRecord);
-            
-            // Add to sidebar table
-            const tbody = document.getElementById('suspectsTableBody');
-            const row = document.createElement('tr');
-            row.innerHTML = `
+      function parseValuesString(valueStr) {
+        const values = [];
+        let current = "";
+        let inQuotes = false;
+        let quoteChar = "";
+
+        for (let i = 0; i < valueStr.length; i++) {
+          const char = valueStr[i];
+
+          if ((char === '"' || char === "'") && !inQuotes) {
+            inQuotes = true;
+            quoteChar = char;
+          } else if (char === quoteChar && inQuotes) {
+            inQuotes = false;
+          } else if (char === "," && !inQuotes) {
+            values.push(current.trim());
+            current = "";
+            continue;
+          }
+          current += char;
+        }
+        if (current.trim()) {
+          values.push(current.trim());
+        }
+        return values;
+      }
+
+      function executeInsertQuery(query) {
+        const valuesIndex = query.toUpperCase().indexOf("VALUES");
+        if (valuesIndex === -1) {
+          return {
+            error:
+              "Invalid INSERT syntax. Use: INSERT INTO suspects (column1, column2) VALUES (value1, value2)",
+          };
+        }
+
+        const beforeValues = query.substring(0, valuesIndex);
+        const afterValues = query.substring(valuesIndex + 6).trim();
+
+        const insertMatch = beforeValues.match(
+          /INSERT\s+INTO\s+(\w+)\s*\((.*?)\)/i,
+        );
+        if (!insertMatch) {
+          return {
+            error:
+              "Invalid INSERT syntax. Use: INSERT INTO suspects (column1, column2) VALUES (value1, value2)",
+          };
+        }
+
+        const tableName = insertMatch[1];
+        if (tableName.toLowerCase() !== "suspects") {
+          return {
+            error: `Table "${tableName}" not found. Use: INSERT INTO suspects (columns) VALUES (values)`,
+          };
+        }
+
+        const columnsStr = insertMatch[2];
+        const columns = columnsStr
+          .split(",")
+          .map((col) => col.trim().toLowerCase());
+
+        const valuesMatch = afterValues.match(/^\((.*)\)$/);
+        if (!valuesMatch) {
+          return {
+            error: "Invalid VALUES syntax. Use: VALUES (value1, value2, ...)",
+          };
+        }
+
+        const values = parseValuesString(valuesMatch[1]);
+
+        if (columns.length !== values.length) {
+          return {
+            error: `Column count (${columns.length}) does not match value count (${values.length}). Provide same number of columns and values.`,
+          };
+        }
+
+        const validColumns = Object.keys(database[0]);
+        for (const col of columns) {
+          if (!validColumns.some((vc) => vc.toLowerCase() === col)) {
+            return {
+              error: `Column "${col}" not found. Available columns: ${validColumns.join(", ")}`,
+            };
+          }
+        }
+
+        const newRecord = {};
+        let nextNo = Math.max(...database.map((r) => r.no_)) + 1;
+        newRecord.no_ = nextNo;
+
+        validColumns.forEach((col) => {
+          if (col !== "no_") {
+            newRecord[col] = null;
+          }
+        });
+
+        for (let i = 0; i < columns.length; i++) {
+          let value = values[i].replace(/^['"]|['"]$/g, "");
+
+          if (!isNaN(value) && value !== "") {
+            value = parseFloat(value);
+          }
+
+          newRecord[columns[i]] = value;
+        }
+
+        database.push(newRecord);
+
+        // Add to sidebar table
+        const tbody = document.getElementById("suspectsTableBody");
+        const row = document.createElement("tr");
+        row.innerHTML = `
                 <td>${newRecord.no_}</td>
-                <td>${newRecord.name || ''}</td>
-                <td>${newRecord.surname || ''}</td>
-                <td>${newRecord.sex || ''}</td>
-                <td>${newRecord.age || ''}</td>
-                <td>${newRecord.height_metres || ''}</td>
-                <td>${newRecord.hair || ''}</td>
-                <td>${newRecord.passport || ''}</td>
-                <td>${newRecord.features || ''}</td>
-                <td>${newRecord.blood || ''}</td>
+                <td>${newRecord.name || ""}</td>
+                <td>${newRecord.surname || ""}</td>
+                <td>${newRecord.sex || ""}</td>
+                <td>${newRecord.age || ""}</td>
+                <td>${newRecord.height_metres || ""}</td>
+                <td>${newRecord.hair || ""}</td>
+                <td>${newRecord.passport || ""}</td>
+                <td>${newRecord.features || ""}</td>
+                <td>${newRecord.blood || ""}</td>
             `;
-            tbody.appendChild(row);
-            
-            return { data: [{ message: `1 row inserted. New record ID: ${nextNo}` }], isModification: true };
+        tbody.appendChild(row);
+
+        return {
+          data: [{ message: `1 row inserted. New record ID: ${nextNo}` }],
+          isModification: true,
+        };
+      }
+
+      function executeUpdateQuery(query) {
+        const updateMatch = query.match(
+          /UPDATE\s+(\w+)\s+SET\s+([\s\S]*?)\s+WHERE\s+([\s\S]*?)$/i,
+        );
+
+        if (!updateMatch) {
+          return {
+            error:
+              "Invalid UPDATE syntax. Use: UPDATE suspects SET column = value WHERE condition",
+          };
         }
 
-        function executeUpdateQuery(query) {
-            const updateMatch = query.match(/UPDATE\s+(\w+)\s+SET\s+([\s\S]*?)\s+WHERE\s+([\s\S]*?)$/i);
-            
-            if (!updateMatch) {
-                return { error: 'Invalid UPDATE syntax. Use: UPDATE suspects SET column = value WHERE condition' };
-            }
-
-            const tableName = updateMatch[1];
-            if (tableName.toLowerCase() !== 'suspects') {
-                return { error: `Table "${tableName}" not found. Use: UPDATE suspects SET columns WHERE condition` };
-            }
-
-            const setClause = updateMatch[2];
-            const whereClause = updateMatch[3];
-
-            const assignments = {};
-            const setParts = setClause.split(',');
-
-            for (const part of setParts) {
-                const equalIndex = part.indexOf('=');
-                if (equalIndex === -1) {
-                    return { error: 'Invalid SET clause. Use: SET column = value or SET col1 = val1, col2 = val2' };
-                }
-
-                const column = part.substring(0, equalIndex).trim().toLowerCase();
-                let value = part.substring(equalIndex + 1).trim();
-                value = value.replace(/^['"]|['"]$/g, '');
-                
-                if (!isNaN(value) && value !== '') {
-                    value = parseFloat(value);
-                }
-                
-                assignments[column] = value;
-            }
-
-            if (Object.keys(assignments).length === 0) {
-                return { error: 'Invalid SET clause. Use: SET column = value or SET col1 = val1, col2 = val2' };
-            }
-
-            const validColumns = Object.keys(database[0]);
-            for (const col of Object.keys(assignments)) {
-                if (!validColumns.some(vc => vc.toLowerCase() === col)) {
-                    return { error: `Column "${col}" not found. Available columns: ${validColumns.join(', ')}` };
-                }
-            }
-
-            const whereResult = parseWhereClause(whereClause, database);
-            if (whereResult.error) {
-                return { error: whereResult.error };
-            }
-
-            let updatedCount = 0;
-            whereResult.data.forEach(record => {
-                Object.entries(assignments).forEach(([col, val]) => {
-                    record[col] = val;
-                });
-                updatedCount++;
-            });
-
-            // Update sidebar table rows
-            whereResult.data.forEach(record => {
-                const tbody = document.getElementById('suspectsTableBody');
-                const rows = tbody.querySelectorAll('tr');
-                rows.forEach(row => {
-                    if (parseInt(row.cells[0].textContent) === record.no_) {
-                        row.cells[0].textContent = record.no_;
-                        row.cells[1].textContent = record.name || '';
-                        row.cells[2].textContent = record.surname || '';
-                        row.cells[3].textContent = record.sex || '';
-                        row.cells[4].textContent = record.age || '';
-                        row.cells[5].textContent = record.height_metres || '';
-                        row.cells[6].textContent = record.hair || '';
-                        row.cells[7].textContent = record.passport || '';
-                        row.cells[8].textContent = record.features || '';
-                        row.cells[9].textContent = record.blood || '';
-                    }
-                });
-            });
-
-            return { data: [{ message: `${updatedCount} row(s) updated.` }], isModification: true };
+        const tableName = updateMatch[1];
+        if (tableName.toLowerCase() !== "suspects") {
+          return {
+            error: `Table "${tableName}" not found. Use: UPDATE suspects SET columns WHERE condition`,
+          };
         }
 
-        function executeDeleteQuery(query) {
-            const deleteMatch = query.match(/DELETE\s+FROM\s+(\w+)\s+WHERE\s+([\s\S]*?)$/i);
-            
-            if (!deleteMatch) {
-                return { error: 'Invalid DELETE syntax. Use: DELETE FROM suspects WHERE condition' };
-            }
+        const setClause = updateMatch[2];
+        const whereClause = updateMatch[3];
 
-            const tableName = deleteMatch[1];
-            if (tableName.toLowerCase() !== 'suspects') {
-                return { error: `Table "${tableName}" not found. Use: DELETE FROM suspects WHERE condition` };
-            }
+        const assignments = {};
+        const setParts = setClause.split(",");
 
-            const whereClause = deleteMatch[2];
+        for (const part of setParts) {
+          const equalIndex = part.indexOf("=");
+          if (equalIndex === -1) {
+            return {
+              error:
+                "Invalid SET clause. Use: SET column = value or SET col1 = val1, col2 = val2",
+            };
+          }
 
-            const whereResult = parseWhereClause(whereClause, database);
-            if (whereResult.error) {
-                return { error: whereResult.error };
-            }
+          const column = part.substring(0, equalIndex).trim().toLowerCase();
+          let value = part.substring(equalIndex + 1).trim();
+          value = value.replace(/^['"]|['"]$/g, "");
 
-            if (whereResult.data.length === 0) {
-                return { data: [{ message: '0 rows deleted. No records matched the WHERE clause.' }], isModification: true };
-            }
+          if (!isNaN(value) && value !== "") {
+            value = parseFloat(value);
+          }
 
-            const deletedCount = whereResult.data.length;
-            const deletedIds = [];
-            
-            whereResult.data.forEach(record => {
-                deletedIds.push(record.no_);
-                const index = database.indexOf(record);
-                if (index > -1) {
-                    database.splice(index, 1);
-                }
-            });
-
-            // Remove rows from sidebar table
-            const tbody = document.getElementById('suspectsTableBody');
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach(row => {
-                const rowId = parseInt(row.cells[0].textContent);
-                if (deletedIds.includes(rowId)) {
-                    row.remove();
-                }
-            });
-
-            return { data: [{ message: `${deletedCount} row(s) deleted.` }], isModification: true };
+          assignments[column] = value;
         }
 
-        function runQuery() {
-            const query = document.getElementById('queryInput').value.trim();
-            
-            if (!query) {
-                showStatus('❌ Error: Please enter a SQL query', 'error');
-                return;
-            }
-
-            try {
-                const result = executeSQLQuery(query);
-                
-                if (result.error) {
-                    showStatus(`❌ ${result.error}`, 'error');
-                } else if (result.isModification) {
-                    showStatus(`✓ ${result.data[0].message}`, 'success');
-                    showEmptyState();
-                } else if (result.data.length === 0) {
-                    showStatus('✓ Query executed successfully - No results found', 'info');
-                    showEmptyState();
-                } else {
-                    showStatus(`✓ Query executed successfully - ${result.data.length} row(s) returned`, 'success');
-                    displayResults(result.data);
-                }
-            } catch (error) {
-                showStatus(`❌ Syntax Error: ${error.message}`, 'error');
-            }
+        if (Object.keys(assignments).length === 0) {
+          return {
+            error:
+              "Invalid SET clause. Use: SET column = value or SET col1 = val1, col2 = val2",
+          };
         }
 
-        function parseWhereClause(whereClause, data) {
-            try {
-                if (whereClause.toUpperCase().startsWith('NOT ')) {
-                    const innerClause = whereClause.substring(4);
-                    const result = parseWhereClause(innerClause, data);
-                    if (result.error) return result;
-                    return { data: data.filter(row => !result.data.includes(row)) };
-                }
-
-                if (/\s+OR\s+/i.test(whereClause)) {
-                    const orParts = whereClause.split(/\s+OR\s+/i);
-                    let filteredData = [];
-                    
-                    for (const part of orParts) {
-                        const result = parseWhereClause(part.trim(), data);
-                        if (result.error) return result;
-                        filteredData = [...new Set([...filteredData, ...result.data])];
-                    }
-                    
-                    return { data: filteredData };
-                }
-
-                if (/\s+AND\s+/i.test(whereClause)) {
-                    const andParts = whereClause.split(/\s+AND\s+/i);
-                    let filteredData = data;
-                    
-                    for (const part of andParts) {
-                        const result = parseWhereClause(part.trim(), filteredData);
-                        if (result.error) return result;
-                        filteredData = result.data;
-                    }
-                    
-                    return { data: filteredData };
-                }
-
-                const operators = ['!=', '<=', '>=', '=', '<', '>', 'LIKE'];
-                let operator = null;
-
-                for (const op of operators) {
-                    if (whereClause.toUpperCase().includes(` ${op} `) || whereClause.includes(` ${op} `)) {
-                        operator = op;
-                        break;
-                    }
-                }
-
-                if (!operator) {
-                    return { error: 'Invalid WHERE clause. Use operators: =, !=, >, <, >=, <=, LIKE. Example: WHERE age > 30' };
-                }
-
-                const [left, right] = whereClause.split(new RegExp(`\\s+${operator}\\s+`, 'i'));
-                const column = left.trim().toLowerCase();
-                const value = right.trim();
-
-                if (!Object.keys(database[0]).some(col => col.toLowerCase() === column)) {
-                    return { error: `Column "${column}" not found in WHERE clause. Available columns: ${Object.keys(database[0]).join(', ')}` };
-                }
-
-                const filteredData = data.filter(row => {
-                    const rowValue = row[column];
-                    
-                    if (operator === 'LIKE') {
-                        const pattern = value.replace(/'/g, '').replace(/%/g, '.*');
-                        return new RegExp(`^${pattern}$`, 'i').test(String(rowValue));
-                    } else if (operator === '=') {
-                        return String(rowValue).toLowerCase() === value.toLowerCase().replace(/'/g, '');
-                    } else if (operator === '!=') {
-                        return String(rowValue).toLowerCase() !== value.toLowerCase().replace(/'/g, '');
-                    } else if (operator === '>') {
-                        return parseFloat(rowValue) > parseFloat(value);
-                    } else if (operator === '<') {
-                        return parseFloat(rowValue) < parseFloat(value);
-                    } else if (operator === '>=') {
-                        return parseFloat(rowValue) >= parseFloat(value);
-                    } else if (operator === '<=') {
-                        return parseFloat(rowValue) <= parseFloat(value);
-                    }
-                    
-                    return false;
-                });
-
-                return { data: filteredData };
-            } catch (error) {
-                return { error: `WHERE clause error: ${error.message}` };
-            }
+        const validColumns = Object.keys(database[0]);
+        for (const col of Object.keys(assignments)) {
+          if (!validColumns.some((vc) => vc.toLowerCase() === col)) {
+            return {
+              error: `Column "${col}" not found. Available columns: ${validColumns.join(", ")}`,
+            };
+          }
         }
 
-        function displayResults(data) {
-            const container = document.getElementById('resultsContainer');
-            
-            if (!data || data.length === 0) {
-                showEmptyState();
-                return;
+        const whereResult = parseWhereClause(whereClause, database);
+        if (whereResult.error) {
+          return { error: whereResult.error };
+        }
+
+        let updatedCount = 0;
+        whereResult.data.forEach((record) => {
+          Object.entries(assignments).forEach(([col, val]) => {
+            record[col] = val;
+          });
+          updatedCount++;
+        });
+
+        // Update sidebar table rows
+        whereResult.data.forEach((record) => {
+          const tbody = document.getElementById("suspectsTableBody");
+          const rows = tbody.querySelectorAll("tr");
+          rows.forEach((row) => {
+            if (parseInt(row.cells[0].textContent) === record.no_) {
+              row.cells[0].textContent = record.no_;
+              row.cells[1].textContent = record.name || "";
+              row.cells[2].textContent = record.surname || "";
+              row.cells[3].textContent = record.sex || "";
+              row.cells[4].textContent = record.age || "";
+              row.cells[5].textContent = record.height_metres || "";
+              row.cells[6].textContent = record.hair || "";
+              row.cells[7].textContent = record.passport || "";
+              row.cells[8].textContent = record.features || "";
+              row.cells[9].textContent = record.blood || "";
+            }
+          });
+        });
+
+        return {
+          data: [{ message: `${updatedCount} row(s) updated.` }],
+          isModification: true,
+        };
+      }
+
+      function executeDeleteQuery(query) {
+        const deleteMatch = query.match(
+          /DELETE\s+FROM\s+(\w+)\s+WHERE\s+([\s\S]*?)$/i,
+        );
+
+        if (!deleteMatch) {
+          return {
+            error:
+              "Invalid DELETE syntax. Use: DELETE FROM suspects WHERE condition",
+          };
+        }
+
+        const tableName = deleteMatch[1];
+        if (tableName.toLowerCase() !== "suspects") {
+          return {
+            error: `Table "${tableName}" not found. Use: DELETE FROM suspects WHERE condition`,
+          };
+        }
+
+        const whereClause = deleteMatch[2];
+
+        const whereResult = parseWhereClause(whereClause, database);
+        if (whereResult.error) {
+          return { error: whereResult.error };
+        }
+
+        if (whereResult.data.length === 0) {
+          return {
+            data: [
+              {
+                message: "0 rows deleted. No records matched the WHERE clause.",
+              },
+            ],
+            isModification: true,
+          };
+        }
+
+        const deletedCount = whereResult.data.length;
+        const deletedIds = [];
+
+        whereResult.data.forEach((record) => {
+          deletedIds.push(record.no_);
+          const index = database.indexOf(record);
+          if (index > -1) {
+            database.splice(index, 1);
+          }
+        });
+
+        // Remove rows from sidebar table
+        const tbody = document.getElementById("suspectsTableBody");
+        const rows = tbody.querySelectorAll("tr");
+        rows.forEach((row) => {
+          const rowId = parseInt(row.cells[0].textContent);
+          if (deletedIds.includes(rowId)) {
+            row.remove();
+          }
+        });
+
+        return {
+          data: [{ message: `${deletedCount} row(s) deleted.` }],
+          isModification: true,
+        };
+      }
+
+      function runQuery() {
+        const query = document.getElementById("queryInput").value.trim();
+
+        if (!query) {
+          showStatus("❌ Error: Please enter a SQL query", "error");
+          return;
+        }
+
+        try {
+          const result = executeSQLQuery(query);
+
+          if (result.error) {
+            showStatus(`❌ ${result.error}`, "error");
+          } else if (result.isModification) {
+            showStatus(`✓ ${result.data[0].message}`, "success");
+            showEmptyState();
+          } else if (result.data.length === 0) {
+            showStatus(
+              "✓ Query executed successfully - No results found",
+              "info",
+            );
+            showEmptyState();
+          } else {
+            showStatus(
+              `✓ Query executed successfully - ${result.data.length} row(s) returned`,
+              "success",
+            );
+            displayResults(result.data);
+          }
+        } catch (error) {
+          showStatus(`❌ Syntax Error: ${error.message}`, "error");
+        }
+      }
+
+      function parseWhereClause(whereClause, data) {
+        try {
+          if (whereClause.toUpperCase().startsWith("NOT ")) {
+            const innerClause = whereClause.substring(4);
+            const result = parseWhereClause(innerClause, data);
+            if (result.error) return result;
+            return { data: data.filter((row) => !result.data.includes(row)) };
+          }
+
+          if (/\s+OR\s+/i.test(whereClause)) {
+            const orParts = whereClause.split(/\s+OR\s+/i);
+            let filteredData = [];
+
+            for (const part of orParts) {
+              const result = parseWhereClause(part.trim(), data);
+              if (result.error) return result;
+              filteredData = [...new Set([...filteredData, ...result.data])];
             }
 
-            const columns = Object.keys(data[0]);
-            
-            let html = `
+            return { data: filteredData };
+          }
+
+          if (/\s+AND\s+/i.test(whereClause)) {
+            const andParts = whereClause.split(/\s+AND\s+/i);
+            let filteredData = data;
+
+            for (const part of andParts) {
+              const result = parseWhereClause(part.trim(), filteredData);
+              if (result.error) return result;
+              filteredData = result.data;
+            }
+
+            return { data: filteredData };
+          }
+
+          const operators = ["!=", "<=", ">=", "=", "<", ">", "LIKE"];
+          let operator = null;
+
+          for (const op of operators) {
+            if (
+              whereClause.toUpperCase().includes(` ${op} `) ||
+              whereClause.includes(` ${op} `)
+            ) {
+              operator = op;
+              break;
+            }
+          }
+
+          if (!operator) {
+            return {
+              error:
+                "Invalid WHERE clause. Use operators: =, !=, >, <, >=, <=, LIKE. Example: WHERE age > 30",
+            };
+          }
+
+          const [left, right] = whereClause.split(
+            new RegExp(`\\s+${operator}\\s+`, "i"),
+          );
+          const column = left.trim().toLowerCase();
+          const value = right.trim();
+
+          if (
+            !Object.keys(database[0]).some(
+              (col) => col.toLowerCase() === column,
+            )
+          ) {
+            return {
+              error: `Column "${column}" not found in WHERE clause. Available columns: ${Object.keys(database[0]).join(", ")}`,
+            };
+          }
+
+          const filteredData = data.filter((row) => {
+            const rowValue = row[column];
+
+            if (operator === "LIKE") {
+              const pattern = value.replace(/'/g, "").replace(/%/g, ".*");
+              return new RegExp(`^${pattern}$`, "i").test(String(rowValue));
+            } else if (operator === "=") {
+              return (
+                String(rowValue).toLowerCase() ===
+                value.toLowerCase().replace(/'/g, "")
+              );
+            } else if (operator === "!=") {
+              return (
+                String(rowValue).toLowerCase() !==
+                value.toLowerCase().replace(/'/g, "")
+              );
+            } else if (operator === ">") {
+              return parseFloat(rowValue) > parseFloat(value);
+            } else if (operator === "<") {
+              return parseFloat(rowValue) < parseFloat(value);
+            } else if (operator === ">=") {
+              return parseFloat(rowValue) >= parseFloat(value);
+            } else if (operator === "<=") {
+              return parseFloat(rowValue) <= parseFloat(value);
+            }
+
+            return false;
+          });
+
+          return { data: filteredData };
+        } catch (error) {
+          return { error: `WHERE clause error: ${error.message}` };
+        }
+      }
+
+      function displayResults(data) {
+        const container = document.getElementById("resultsContainer");
+
+        if (!data || data.length === 0) {
+          showEmptyState();
+          return;
+        }
+
+        const columns = Object.keys(data[0]);
+
+        let html = `
                 <table class="results-table">
                     <thead>
                         <tr>
-                            ${columns.map(col => `<th>${col}</th>`).join('')}
+                            ${columns.map((col) => `<th>${col}</th>`).join("")}
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.map(row => `
+                        ${data
+                          .map(
+                            (row) => `
                             <tr>
-                                ${columns.map(col => `<td>${row[col] !== null ? row[col] : 'NULL'}</td>`).join('')}
+                                ${columns.map((col) => `<td>${row[col] !== null ? row[col] : "NULL"}</td>`).join("")}
                             </tr>
-                        `).join('')}
+                        `,
+                          )
+                          .join("")}
                     </tbody>
                 </table>
             `;
 
-            container.innerHTML = html;
-        }
+        container.innerHTML = html;
+      }
 
-        // Initialize on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            initializeSidebar();
-            initializeResize();
-            showEmptyState();
-        });
+      // Initialize on page load
+      window.addEventListener("DOMContentLoaded", () => {
+        initializeSidebar();
+        initializeResize();
+        showEmptyState();
+      });
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cfd361985121205',t:'MTc3MTQxNDQyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'9cfd361985121205',t:'MTc3MTQxNDQyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>
